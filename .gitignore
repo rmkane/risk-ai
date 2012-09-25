@@ -9,5 +9,5 @@
 .classpath
 .project
 
-/bin/
-/img/
+/bin
+/img
