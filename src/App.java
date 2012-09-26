@@ -77,12 +77,17 @@ public class App extends JFrame implements MouseListener {
 		
 		// Test update by removing 7 of player 1's territories
 		for (int i = 0; i < 7; i++) {
-			players.get(1).getCountries().add(players.get(0).getCountries().remove(0));
+			Player HUMAN = players.get(0);
+			Player AI = players.get(1);
+			Country country = HUMAN.getTerritories().get(0);
+			// Simulate losing a territory
+			HUMAN.loseBattle(country, AI, 3);
 		}
 		playerPanel[0].updatePanel();
 		playerPanel[1].updatePanel();
+		mapPanel.update();
 		
-		newGame();
+		//newGame();
 		
 		mainPanel.addMouseListener(this);
 	}
@@ -112,10 +117,10 @@ public class App extends JFrame implements MouseListener {
 					for (Card card : player.getHand()) {
 						if (country.getName().equalsIgnoreCase(card.getCountryName())) {
 							// Add a reference to player territories
-							player.getCountries().add(country);
+							player.getTerritories().add(country);
 							// Assign territory traits
 							country.setPlayer(player);
-							player.addUnits(1, country);
+							player.draftUnits(1, country);
 						}
 					}
 				}
@@ -173,6 +178,7 @@ public class App extends JFrame implements MouseListener {
 		centerPanel.setLayout(new GridBagLayout());
 		centerPanel.setBackground(new Color(0xaabbff));
 		mapPanel = new MapPanel();
+		mapPanel.setBoard(gameboard);
 		mainPanel.add(centerPanel, BorderLayout.CENTER);
 		addComponent(centerPanel, mapPanel, 0, 0, 1, 1, GridBagConstraints.CENTER);
 	}
@@ -200,7 +206,7 @@ public class App extends JFrame implements MouseListener {
 	private void newGame() {
 		System.out.println();
 
-		Country curr = gameboard.C_AMERICA;
+		Country curr = gameboard.N_AFRICA;
 		try {
 			Set<Country> neightbors = gameboard.getNeighbors(curr);
 			for (Country c : neightbors) {

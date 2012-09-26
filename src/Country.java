@@ -1,3 +1,5 @@
+import java.awt.Point;
+
 import javax.swing.ImageIcon;
 
 public class Country implements Comparable<Country>{
@@ -6,24 +8,32 @@ public class Country implements Comparable<Country>{
 	private ImageIcon image;
 	private Player player;
 	private int armySize;
+	private Point point;
+	private int colorVal;
 	
-
 	public Country() {
 		this.name = "";
 		this.image = null;
 		this.player = null;
 		this.armySize = 0;
+		this.point = new Point();
+		this.colorVal = 0x0;
 	}
 
 	public Country(String name) {
 		this.name = name;
 		this.player = null;
 		this.armySize = 0;
-
-		//String filename = ("countries/").concat(name.replace(' ', '_').toLowerCase().concat(".png"));
-		//URL imageURL = this.getClass().getClassLoader().getResource(filename);
-		//image = new ImageIcon(imageURL);		
-		//System.out.println(("Loaded: ").concat(filename));
+		this.point = new Point();
+		this.colorVal = 0x0;
+	}
+	
+	public Country(String name, Point point, int colorVal) {
+		this.name = name;
+		this.player = null;
+		this.armySize = 0;
+		this.point = point;
+		this.colorVal = colorVal;
 	}
 
 	public String getName() {
@@ -50,8 +60,12 @@ public class Country implements Comparable<Country>{
 		this.armySize = armySize;
 	}
 
-	public static void main(String[] args) {
-		//new Country("Brazil");
+	public Point getPoint() {
+		return point;
+	}
+
+	public int getColorVal() {
+		return colorVal;
 	}
 	
 	@Override

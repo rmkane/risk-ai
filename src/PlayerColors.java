@@ -3,7 +3,7 @@ import java.awt.Color;
 public enum PlayerColors {
 	RED(0x8D261F),
 	YELLOW(0xEFD159),
-	GREEN(0x617369),
+	GREEN(0x415349),
 	BLUE(0x394C7B),
 	GRAY(0xA5A5A3),
 	BLACK(0x000000);

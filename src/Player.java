@@ -7,7 +7,8 @@ public class Player {
 	private String name;
 	private Color color;
 	private int points;
-	private int armies;
+	private int draftedArmies;
+	private int armySize;
 	private ArrayList<Country> territories;
 	private ArrayList<String> territoriesByName;
 	private ArrayList<Card> hand;
@@ -16,7 +17,7 @@ public class Player {
 		this.name = "";
 		this.color = new Color(0x000000);
 		this.points = 0;
-		this.armies = 80;
+		this.draftedArmies = 80;
 		this.territories = new ArrayList<Country>();
 		this.territoriesByName = new ArrayList<String>();
 		this.hand = new ArrayList<Card>();
@@ -26,7 +27,7 @@ public class Player {
 		this.name = name;
 		this.color = color.color();
 		this.points = 0;
-		this.armies = armies;
+		this.draftedArmies = armies;
 		this.territories = new ArrayList<Country>();
 		this.territoriesByName = new ArrayList<String>();
 		this.hand = new ArrayList<Card>();
@@ -55,13 +56,13 @@ public class Player {
 	public void setPoints(int points) {
 		this.points = points;
 	}
-
-	public int getArmies() {
-		return armies;
+	
+	public int getDraftedArmies() {
+		return draftedArmies;
 	}
 
-	public void setArmies(int armies) {
-		this.armies = armies;
+	public void setDraftedArmies(int draftedArmies) {
+		this.draftedArmies = draftedArmies;
 	}
 
 	public ArrayList<Country> getTerritories() {
@@ -72,22 +73,18 @@ public class Player {
 		this.territories = territories;
 	}
 
-	public ArrayList<Country> getCountries() {
-		return territories;
-	}
-
 	public String[] getTerritoriesByName() {
-		String[] countries = new String[getCountries().size()];
+		String[] countries = new String[getTerritories().size()];
 		Collections.sort(territories);
 		for (int i = 0; i < countries.length; i++) {
-			countries[i] = getCountries().get(i).getName();
+			countries[i] = getTerritories().get(i).getName();
 		}
 		return countries;
 	}
 
 	public int getArmySize() {
 		int armySize = 0;
-		for (Country country : getCountries()) {
+		for (Country country : getTerritories()) {
 			armySize += country.getArmySize();
 		}
 		return armySize;
@@ -101,25 +98,39 @@ public class Player {
 		this.hand = hand;
 	}
 	
+	public void draftUnits(int units, Country country) {
+		if (country.getPlayer() == null || country.getPlayer() == this && units <= this.getDraftedArmies()) {
+			setDraftedArmies(getDraftedArmies() - units);
+			country.setArmySize(country.getArmySize() + units);
+		}
+	}
+	
 	public void addUnits(int units, Country country) {
-		if (getArmies() > 0 && units <= getArmies() && country.getPlayer() == this) {
-			setArmies(getArmies() - units);
+		if (country.getPlayer() == this || (country.getArmySize() == 0 && country.getPlayer() != this)) {
 			country.setArmySize(country.getArmySize() + units);
 		}
 	}
 	
 	public void removeUnits(int units, Country country) {
-		if (country.getArmySize() > 1 && units < country.getArmySize() && country.getPlayer() == this) {
-			setArmies(getArmies() + units);
+		if (country.getPlayer() == this && country.getArmySize() >= units) {
 			country.setArmySize(country.getArmySize() - units);
 		}
+	}
+	
+	public void loseBattle(Country country, Player enemy, int enemyUnits) {
+		int yourUnits = country.getArmySize();
+		this.removeUnits(yourUnits, country); // Remove your remaining units *could be 1 or 2
+		this.getTerritories().remove(country); // Remove country from your territories list
+		enemy.getTerritories().add(country); // Add the country to the Enemy's list of territories
+		enemy.addUnits(enemyUnits, country); // Remember: Enemy player adds number of units greater than or equal to their final dice roll wins
+		country.setPlayer(enemy); // Give the Enemy control of the territory 
 	}
 
 	@Override
 	public String toString() {
 		return "Player [name=" + name + ", color=" + color + ", points=" + points
-				+ ", armies=" + armies + ", territories=" + territories
-				+ ", territoriesByName=" + territoriesByName + ", hand=" + hand + "]";
+				+ ", draftedArmies=" + draftedArmies + ", armySize=" + armySize
+				+ ", territories=" + territories + ", territoriesByName="
+				+ territoriesByName + ", hand=" + hand + "]";
 	}
-
 }

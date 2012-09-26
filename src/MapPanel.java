@@ -1,7 +1,9 @@
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,11 +19,10 @@ public class MapPanel extends JPanel implements MouseListener {
 
 	private static final long serialVersionUID = 1L;
 	private final int WIDTH = 800, HEIGHT = 409;
-	// URL imageURL =
-	// this.getClass().getClassLoader().getResource("resources/map.png");
-	// Image map = new ImageIcon(imageURL).getImage();
-	String filename = "resources/map.png";
-	BufferedImage map = readImage(filename);
+	private String filename = "resources/map.png";
+	private BufferedImage map = readImage(filename);
+	private Board board;
+	private Font font = new Font("Verdana", Font.BOLD, 11);
 
 	public MapPanel() {
 		this.addMouseListener(this);
@@ -29,24 +30,26 @@ public class MapPanel extends JPanel implements MouseListener {
 
 		//printAllARGBDetails(map);
 	}
-	
-	private void getTerritoryInfo() {
-		// Update Info
-	}
 
 	@Override
 	public void paintComponent(Graphics g) {
 		g.drawImage(map, 0, 0, this.getWidth(), this.getHeight(), this);
 
-		int[][] coordinates = { {50, 41},{ 80, 105 }, {94, 70}, { 215, 262 }, { 363, 176 },
-				{ 566, 162 }, { 449, 69 }, { 285, 21 } };
-		for (int c = 0; c < coordinates.length; c++) {
-			g.setColor(Color.BLACK);
-			g.fillRect(coordinates[c][0] - 1, coordinates[c][1] - 1, 18, 18);
-			g.setColor(Color.WHITE);
-			g.fillRect(coordinates[c][0], coordinates[c][1], 16, 16);
-			g.setColor(Color.BLACK);
-			g.drawString("99", coordinates[c][0] + 1, coordinates[c][1] + 12);
+		for (Continent continent : board.WORLD) {
+			for (Country country : continent.getCountries()) {
+				Player player = country.getPlayer();
+				Color playerColor = player.getColor();
+				Point coordinate = country.getPoint();
+				int armySize = country.getArmySize();
+				
+				g.setColor(playerColor);
+				g.fillRect(coordinate.x - 1, coordinate.y - 1, 18, 18);
+				g.setColor(Color.WHITE);
+				g.fillRect(coordinate.x, coordinate.y, 16, 16);
+				g.setColor(playerColor);
+				g.setFont(font);
+				g.drawString(String.format("%02d", armySize), coordinate.x, coordinate.y + 12);
+			}
 		}
 	}
 
@@ -60,10 +63,15 @@ public class MapPanel extends JPanel implements MouseListener {
 		}
 		return img;
 	}
+	
+	public int getPixelColor(BufferedImage image, int x, int y) {
+		return image.getRGB(x, y);
+	}
 
 	public void getPixelInfo(BufferedImage image, int x, int y) {
 		int pixel = image.getRGB(x, y);
-		System.out.printf("Pixel: (%d, %d) Color: %s\n", x, y, getARGBPixelData(pixel));
+		//System.out.printf("Pixel: (%d, %d) Color: %s\n", x, y, getARGBPixelData(pixel));
+		System.out.printf("new Point(%d, %d), %x\n", x, y, pixel);
 	}
 
 	public void printAllARGBDetails(BufferedImage image) {
@@ -76,8 +84,7 @@ public class MapPanel extends JPanel implements MouseListener {
 			for (int j = 0; j < height; j++) {
 
 				int pixel = image.getRGB(i, j);
-				System.out.println("Pixel Location(" + i + "," + j + ")- ["
-						+ getARGBPixelData(pixel) + "]");
+				System.out.printf("Pixel Location(%d,%d) - [%s]", i, j, getARGBPixelData(pixel));
 			}
 		}
 	}
@@ -88,6 +95,15 @@ public class MapPanel extends JPanel implements MouseListener {
 		int green = (pixel >> 8) & 0xFF;
 		int blue = (pixel) & 0xFF;
 		return String.format("ARGB(%d,%d,%d,%d)", alpha, red, green, blue);
+	}
+	
+	public void setBoard(Board board) {
+		this.board = new Board();
+	}
+	
+	public void update() {
+		this.validate();
+		this.repaint();
 	}
 
 	@Override

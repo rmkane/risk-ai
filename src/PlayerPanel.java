@@ -24,6 +24,7 @@ public class PlayerPanel extends JPanel {
 	private JScrollPane scrollPane;
 	private JList<String> territoriesList;
 	private JLabel armySizeLabel;
+	private JLabel draftedUnits;
 	private final int CENTER = GridBagConstraints.CENTER;
 	
 	public PlayerPanel() {
@@ -35,6 +36,7 @@ public class PlayerPanel extends JPanel {
 		bgColor = new Color(0x88aabb);
 		playerName = new JLabel("Player X");
 		armySizeLabel = new JLabel("Army Size: 0");
+		draftedUnits = new JLabel("Drafted Units: 0");
 		territoriesList = new JList<>(new String[] {"Country 1", "Country 2", "Country 3"});
 		playerName.setFont(new Font("Serif", Font.BOLD, 14));
 		
@@ -51,6 +53,7 @@ public class PlayerPanel extends JPanel {
 		titlePanel.setLayout(new GridLayout(0, 1));
 		titlePanel.add(playerName);
 		titlePanel.add(armySizeLabel);
+		titlePanel.add(draftedUnits);
 				
 		scrollPane = new JScrollPane(territoriesList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);	
 		infoPanel.setLayout(new BorderLayout());
@@ -71,7 +74,8 @@ public class PlayerPanel extends JPanel {
 		titlePanel.setBackground(player.getColor());
 		playerName.setText("Player: " + player.getName());
 		playerName.setForeground(new Color(0xFFFFFF));
-		armySizeLabel.setText("Army Size: " + player.getArmies());
+		armySizeLabel.setText("Army Size: " + player.getArmySize());
+		draftedUnits.setText("Drafted Units: " + player.getDraftedArmies());
 		territoriesList.ensureIndexIsVisible(territoriesList.getSelectedIndex());
 		territoriesList.setListData(player.getTerritoriesByName());
 		territoriesList.validate();
