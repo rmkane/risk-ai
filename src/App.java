@@ -3,6 +3,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,25 +15,28 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.LineBorder;
 
-public class App extends JFrame implements MouseListener {
+public class App extends JFrame implements MouseListener, ActionListener {
 
 	private static final long serialVersionUID = 1L;
-
-	private JFrame frame;
-
+	
 	// GUI Components
 	private final int CENTER = GridBagConstraints.CENTER;
-	private static int WIDTH = 1000, HEIGHT = 700;
+	private static int WIDTH = 1024, HEIGHT = 728;
+	private final Dimension SIZE = new Dimension(WIDTH, HEIGHT);
 
 	// Menu
 	private JMenuBar menubar = new JMenuBar();
@@ -44,13 +48,36 @@ public class App extends JFrame implements MouseListener {
 	private JMenuItem about = new JMenuItem("About");
 
 	private JPanel mainPanel;
-	private JPanel centerPanel;
 	private JPanel playerInfoPanel;
+	private PlayerPanel[] playerPanel;
+	private JPanel mapWrapper;
 	private MapPanel mapPanel;
-
-	private PlayerPanel[] playerPanel = new PlayerPanel[3];
-
+	private JPanel viewPanel;
+	private JPanel actionPanel;
+	private JPanel selectPanel;
+	private JPanel commandPanel;
+	private JLabel selectPanelTitle;
+	private JLabel sourceCountryLabel;
+	private JPanel sourceCountryPanel;
+	private ImageIcon sourceCountryImage;
+	private JLabel destCountryLabel;
+	private JPanel destCountryPanel;
+	private ImageIcon destCountryImage;
+	private JLabel commandPanelTitle;
+	private JButton chooseSourceButton;
+	private JButton chooseDestButton;
+	private JButton draftUnitsButton;
 	private JButton attackButton;
+	private JButton fortifyButton;
+	private JButton skipButton;
+	private JPanel cardListPanel;
+	private JLabel cardPanelLabel;
+	private JList<String> cardList;
+	private JScrollPane cardListScroll;
+	
+	private Country sourceCountry;
+	private Country destCountry;
+
 
 	private ArrayList<Player> players;
 	private Board gameboard;
@@ -129,58 +156,96 @@ public class App extends JFrame implements MouseListener {
 	}
 
 	private void initGUI() {
-		frame = new JFrame("RISK");
-
 		initMenu();
 		initComponents();
 
-		frame.setSize(WIDTH, HEIGHT);
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		this.setTitle("RISK");
+		this.setPreferredSize(SIZE);
+		this.setMinimumSize(SIZE);
+		this.setMaximumSize(SIZE);
+		this.setLocationRelativeTo(null);
+		this.setVisible(true);
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 	}
 
 	private void initComponents() {
-		mainPanel = new JPanel();
-		mainPanel.setLayout(new BorderLayout());
-		frame.add(mainPanel);
-
-		initMapPanel();
-		initPlayerInfoPanel();
-		this.setBackground(new Color(0x000000));
-
-		attackButton = new JButton("Attack");
-		attackButton.setPreferredSize(new Dimension(80, 40));
-	}
-
-	private void initPlayerInfoPanel() {
-		// creates control panel
-		playerInfoPanel = new JPanel();
-		playerInfoPanel.setPreferredSize(new Dimension(150, 0));
-		// rightToolbar.setLayout(new GridLayout(4,1,0,15));
-		playerInfoPanel.setLayout(new GridBagLayout());
-		playerInfoPanel.setBorder(LineBorder.createGrayLineBorder());
-		playerInfoPanel.setBackground(new Color(0x888888));
-
-		// Initialize Player Panels
+		// Initialize components
+		mainPanel = new JPanel(new BorderLayout());
+		playerInfoPanel = new JPanel(new GridLayout(3, 1));
+		playerPanel = new PlayerPanel[3];
 		playerPanel[0] = new PlayerPanel();
 		playerPanel[1] = new PlayerPanel();
 		playerPanel[2] = new PlayerPanel();
+		mapWrapper = new JPanel(new GridBagLayout());
+		mapPanel = new MapPanel(gameboard);
+		viewPanel  = new JPanel(new BorderLayout());
+		actionPanel = new JPanel(new GridBagLayout());
+		selectPanel = new JPanel(new GridBagLayout());
+		commandPanel = new JPanel(new BorderLayout());
+		selectPanelTitle = new JLabel("Selected Territories");
+		sourceCountryLabel = new JLabel("Source");
+		sourceCountryPanel = new JPanel();
+		sourceCountryImage = new ImageIcon();
+		destCountryLabel  = new JLabel("Desination");
+		destCountryPanel = new JPanel();
+		destCountryImage = new ImageIcon();
+		commandPanelTitle = new JLabel("Commands");
+		chooseSourceButton = new JButton("Choose Source");
+		chooseDestButton = new JButton("Choose Destination");
+		draftUnitsButton = new JButton("Draft");
+		attackButton = new JButton("Attack");
+		fortifyButton = new JButton("Fortify");
+		skipButton = new JButton("Skip Turn");
+		cardListPanel = new JPanel(new GridBagLayout());
+		cardPanelLabel = new JLabel("Hand");
+		cardList = new JList<>(new String[] {"Card 1", "Card 2", "Card 3", "Card 4", "Card 5"});
+		cardListScroll = new JScrollPane(cardList);
+				
+		// Add ActionListeners
+		chooseSourceButton.addActionListener(this);
+		chooseDestButton.addActionListener(this);
+		draftUnitsButton.addActionListener(this);
+		attackButton.addActionListener(this);
+		fortifyButton.addActionListener(this);
+		skipButton.addActionListener(this);
+		
+		// Player Info panel
+		//playerInfoPanel.setPreferredSize(new Dimension(150, 0));
+		// rightToolbar.setLayout(new GridLayout(4,1,0,15));
+		playerInfoPanel.setBorder(LineBorder.createGrayLineBorder());
+		playerInfoPanel.setBackground(new Color(0x888888));		
+		mainPanel.setBackground(new Color(0x0));
+		
+		// Add components
+		this.add(mainPanel);
+		mainPanel.add(playerInfoPanel, BorderLayout.WEST);
+		playerInfoPanel.add(playerPanel[0]);
+		playerInfoPanel.add(playerPanel[1]);
+		playerInfoPanel.add(playerPanel[2]);
+		mainPanel.add(viewPanel, BorderLayout.CENTER);
+		viewPanel.add(mapWrapper, BorderLayout.CENTER);
+		addComponent(mapWrapper, mapPanel, 0, 0, 1, 1, CENTER);
+		viewPanel.add(commandPanel, BorderLayout.SOUTH);
+		commandPanel.add(selectPanel, BorderLayout.WEST);
+		addComponent(selectPanel, selectPanelTitle, 0, 0, 1, 1, GridBagConstraints.NORTH);
+		addComponent(selectPanel, sourceCountryLabel, 0, 1, 1, 1, CENTER);
+		addComponent(selectPanel, sourceCountryPanel, 0, 2, 1, 1, CENTER);
+		addComponent(selectPanel, destCountryLabel, 0, 3, 1, 1, CENTER);
+		addComponent(selectPanel, destCountryPanel, 0, 4, 1, 1, CENTER);
+		commandPanel.add(actionPanel, BorderLayout.CENTER);
+		addComponent(actionPanel, commandPanelTitle, 0, 0, 1, 1, GridBagConstraints.NORTH);
+		addComponent(actionPanel, chooseSourceButton, 0, 1, 1, 1, CENTER);
+		addComponent(actionPanel, chooseDestButton, 0, 2, 1, 1, CENTER);
+		addComponent(actionPanel, draftUnitsButton, 0, 3, 1, 1, CENTER);
+		addComponent(actionPanel, attackButton, 0, 4, 1, 1, CENTER);
+		addComponent(actionPanel, fortifyButton, 0, 5, 1, 1, CENTER);
+		commandPanel.add(cardListPanel, BorderLayout.EAST);
+		addComponent(cardListPanel, cardPanelLabel, 0, 0, 1, 1, GridBagConstraints.NORTH);
+		addComponent(cardListPanel, cardListScroll, 0, 1, 1, 1, CENTER);
 
-		addComponent(playerInfoPanel, playerPanel[0], 0, 0, 1, 1, CENTER);
-		addComponent(playerInfoPanel, playerPanel[1], 0, 1, 1, 1, CENTER);
-		addComponent(playerInfoPanel, playerPanel[2], 0, 2, 1, 1, CENTER);
-		mainPanel.add(playerInfoPanel, BorderLayout.LINE_START);
-	}
-
-	private void initMapPanel() {
-		centerPanel = new JPanel();
-		centerPanel.setLayout(new GridBagLayout());
-		centerPanel.setBackground(new Color(0xaabbff));
-		mapPanel = new MapPanel();
-		mapPanel.setBoard(gameboard);
-		mainPanel.add(centerPanel, BorderLayout.CENTER);
-		addComponent(centerPanel, mapPanel, 0, 0, 1, 1, GridBagConstraints.CENTER);
+		mapWrapper.setBackground(new Color(0xbbccff));
+		sourceCountryPanel.setPreferredSize(new Dimension(20, 20));
+		destCountryPanel.setPreferredSize(new Dimension(20, 20));
 	}
 
 	private void initMenu() {
@@ -200,7 +265,7 @@ public class App extends JFrame implements MouseListener {
 		newGame.addActionListener(new NewGameMenuListener());
 		quit.addActionListener(new QuitMenuListener());
 		about.addActionListener(new AboutMenuListener());
-		frame.setJMenuBar(menubar);
+		this.setJMenuBar(menubar);
 	}
 
 	private void newGame() {
@@ -289,5 +354,13 @@ public class App extends JFrame implements MouseListener {
 	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		if (e.getSource() == attackButton) {
+			System.out.println("Attack!");
+		}
 	}
 }

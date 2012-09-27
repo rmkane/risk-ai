@@ -6,6 +6,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
@@ -42,7 +43,7 @@ public class PlayerPanel extends JPanel {
 		
 		mainPanel = new JPanel();
 		infoPanel = new JPanel();
-		titlePanel = new JPanel();	
+		titlePanel = new JPanel();
 		
 		this.add(mainPanel);
 		mainPanel.setLayout(new BorderLayout());
@@ -58,11 +59,12 @@ public class PlayerPanel extends JPanel {
 		scrollPane = new JScrollPane(territoriesList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);	
 		infoPanel.setLayout(new BorderLayout());
 		
-		infoPanel.add(scrollPane, BorderLayout.CENTER);
+		infoPanel.add(scrollPane);
 		//addComponent(infoPanel, scrollPane, 0, 0, 1, 1, CENTER);
 		
-		this.setPreferredSize(new Dimension(140, 200));
-		mainPanel.setPreferredSize(this.getPreferredSize().getSize());
+		
+		//this.setPreferredSize(new Dimension(140, 200));
+		mainPanel.setPreferredSize(new Dimension((int)(this.getPreferredSize().getSize().getWidth()*1.75), (int)(this.getPreferredSize().getSize().getHeight())));
 		//titlePanel.setPreferredSize(new Dimension(120, 40));
 	}
 	

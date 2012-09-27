@@ -24,7 +24,8 @@ public class MapPanel extends JPanel implements MouseListener {
 	private Board board;
 	private Font font = new Font("Verdana", Font.BOLD, 11);
 
-	public MapPanel() {
+	public MapPanel(Board board) {
+		this.board = new Board();
 		this.addMouseListener(this);
 		setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
@@ -71,7 +72,7 @@ public class MapPanel extends JPanel implements MouseListener {
 	public void getPixelInfo(BufferedImage image, int x, int y) {
 		int pixel = image.getRGB(x, y);
 		//System.out.printf("Pixel: (%d, %d) Color: %s\n", x, y, getARGBPixelData(pixel));
-		System.out.printf("new Point(%d, %d), %x\n", x, y, pixel);
+		System.out.printf("new Point(%d, %d), 0x%x\n", x, y, pixel);
 	}
 
 	public void printAllARGBDetails(BufferedImage image) {
@@ -95,10 +96,6 @@ public class MapPanel extends JPanel implements MouseListener {
 		int green = (pixel >> 8) & 0xFF;
 		int blue = (pixel) & 0xFF;
 		return String.format("ARGB(%d,%d,%d,%d)", alpha, red, green, blue);
-	}
-	
-	public void setBoard(Board board) {
-		this.board = new Board();
 	}
 	
 	public void update() {

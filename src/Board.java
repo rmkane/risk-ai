@@ -1,6 +1,19 @@
 import java.awt.Point;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Set;
+
+import javax.imageio.ImageIO;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * 
@@ -71,6 +84,38 @@ public class Board {
 	public static Country W_AUSTRALIA = new Country("Western Australia",new Point(677, 305), 0xFF800040);
 
 	public Board() {
+		/*
+		try {
+			URL url = null;
+			File xml = null;
+			if (url == null) url  = this.getClass().getClassLoader().getResource("resources/map.xml");
+			if (xml == null) xml = new File(url.getPath());
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			Document doc = dBuilder.parse(xml);
+			doc.getDocumentElement().normalize();
+			
+			System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+			NodeList nList = doc.getElementsByTagName("staff");
+			System.out.println("-----------------------");
+	 
+			for (int temp = 0; temp < nList.getLength(); temp++) {
+	 
+			   Node nNode = nList.item(temp);
+			   if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+	 
+			      Element eElement = (Element) nNode;
+	 
+			      System.out.println("First Name : " + getTagValue("continent", eElement));
+			      System.out.println("Last Name : " + getTagValue("lastname", eElement));
+		              System.out.println("Nick Name : " + getTagValue("nickname", eElement));
+			      System.out.println("Salary : " + getTagValue("salary", eElement));
+	 
+			   }
+			}
+		} catch (Exception e) {} */
+		
+
 		// Add Continents to the World
 		WORLD.add(N_AMERICA);
 		WORLD.add(S_AMERICA);
@@ -266,4 +311,12 @@ public class Board {
 		}
 		return neighbors;
 	}
+	
+	private String getTagValue(String sTag, Element eElement) {
+		NodeList nlList = eElement.getElementsByTagName(sTag).item(0).getChildNodes();
+	 
+	        Node nValue = (Node) nlList.item(0);
+	 
+		return nValue.getNodeValue();
+	  }
 }
