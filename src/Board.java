@@ -253,6 +253,7 @@ public class Board {
 			territories.addEdge(SCANDINAVIA, UKRAINE);
 			territories.addEdge(S_EUROPE, UKRAINE);
 			territories.addEdge(S_EUROPE, N_AFRICA);
+			territories.addEdge(S_EUROPE, EGYPT);
 			territories.addEdge(W_EUROPE, S_EUROPE);
 			territories.addEdge(W_EUROPE, EGYPT);
 			territories.addEdge(W_EUROPE, N_AFRICA);
