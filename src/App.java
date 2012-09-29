@@ -1,6 +1,9 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -11,9 +14,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -27,12 +35,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
+import javax.swing.event.AncestorListener;
 
 public class App extends JFrame implements MouseListener, ActionListener {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	// GUI Components
 	private final int CENTER = GridBagConstraints.CENTER;
 	private static int WIDTH = 1024, HEIGHT = 728;
@@ -57,39 +67,49 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private JPanel selectPanel;
 	private JPanel commandPanel;
 	private JLabel selectPanelTitle;
-	private JLabel sourceCountryLabel;
-	private JPanel sourceCountryPanel;
-	private ImageIcon sourceCountryImage;
-	private JLabel destCountryLabel;
-	private JPanel destCountryPanel;
-	private ImageIcon destCountryImage;
+
+	private JLabel sourceCountryTitleLabel;
+	private JLabel sourceCountryImageLabel;
+	private JLabel sourceCountryNameLabel;
+	private JLabel destCountryTitleLabel;
+	private JLabel destCountryImageLabel;
+	private JLabel destCountryNameLabel;
 	private JLabel commandPanelTitle;
 	private JButton chooseSourceButton;
 	private JButton chooseDestButton;
 	private JButton draftUnitsButton;
 	private JButton attackButton;
 	private JButton fortifyButton;
-	private JButton skipButton;
+	private JButton endTurnButton;
 	private JPanel cardListPanel;
 	private JLabel cardPanelLabel;
 	private JList<String> cardList;
 	private JScrollPane cardListScroll;
-	
+
 	private Country sourceCountry;
 	private Country destCountry;
 
-
+	private Object lastButton;
+	
 	private ArrayList<Player> players;
 	private Board gameboard;
 	private Deck cards;
 	private int turn;
+	
+	private Player currPlayer;
+	
+	private enum State {DRAFT, ATTACK, FORTIFY, END};
+	private State gameState;
 
 	// private Deck territories;
 
 	public App() {
+		gameState = State.DRAFT;
+		lastButton = null;
 		// Create Board
 		this.gameboard = new Board();
 		createPlayers();
+		currPlayer = players.get(turn %2);
 		dealCards();
 		assignTerritories();
 		System.out.println(players);
@@ -101,7 +121,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			playerPanel[i].addPlayer(players.get(i));
 			playerPanel[i].updatePanel();
 		}
-		
+
 		// Test update by removing 7 of player 1's territories
 		for (int i = 0; i < 7; i++) {
 			Player HUMAN = players.get(0);
@@ -113,9 +133,9 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		playerPanel[0].updatePanel();
 		playerPanel[1].updatePanel();
 		mapPanel.update();
-		
-		//newGame();
-		
+
+		// newGame();
+
 		mainPanel.addMouseListener(this);
 	}
 
@@ -154,6 +174,12 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			}
 		}
 	}
+	
+	private void nextPlayer() {
+		gameState = State.DRAFT;
+		turn++;
+		currPlayer = players.get(turn % 2);
+	}
 
 	private void initGUI() {
 		initMenu();
@@ -178,44 +204,57 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		playerPanel[2] = new PlayerPanel();
 		mapWrapper = new JPanel(new GridBagLayout());
 		mapPanel = new MapPanel(gameboard);
-		viewPanel  = new JPanel(new BorderLayout());
+		viewPanel = new JPanel(new BorderLayout());
 		actionPanel = new JPanel(new GridBagLayout());
 		selectPanel = new JPanel(new GridBagLayout());
 		commandPanel = new JPanel(new BorderLayout());
 		selectPanelTitle = new JLabel("Selected Territories");
-		sourceCountryLabel = new JLabel("Source");
-		sourceCountryPanel = new JPanel();
-		sourceCountryImage = new ImageIcon();
-		destCountryLabel  = new JLabel("Desination");
-		destCountryPanel = new JPanel();
-		destCountryImage = new ImageIcon();
+		sourceCountryTitleLabel = new JLabel("Source");
+		sourceCountryImageLabel = new JLabel(new ImageIcon(
+				readImage("resources/default.png")));
+		sourceCountryNameLabel = new JLabel("<SOURCE>");
+		destCountryTitleLabel = new JLabel("Desination");
+		destCountryImageLabel = new JLabel(new ImageIcon(
+				readImage("resources/default.png")));
+		destCountryNameLabel = new JLabel("<DESTINATION>");
 		commandPanelTitle = new JLabel("Commands");
 		chooseSourceButton = new JButton("Choose Source");
 		chooseDestButton = new JButton("Choose Destination");
 		draftUnitsButton = new JButton("Draft");
 		attackButton = new JButton("Attack");
 		fortifyButton = new JButton("Fortify");
-		skipButton = new JButton("Skip Turn");
+		endTurnButton = new JButton("End Turn");
 		cardListPanel = new JPanel(new GridBagLayout());
 		cardPanelLabel = new JLabel("Hand");
-		cardList = new JList<>(new String[] {"Card 1", "Card 2", "Card 3", "Card 4", "Card 5"});
+		cardList = new JList<>(new String[] { "Card 1", "Card 2", "Card 3",
+				"Card 4", "Card 5" });
 		cardListScroll = new JScrollPane(cardList);
-				
+
 		// Add ActionListeners
 		chooseSourceButton.addActionListener(this);
 		chooseDestButton.addActionListener(this);
 		draftUnitsButton.addActionListener(this);
 		attackButton.addActionListener(this);
 		fortifyButton.addActionListener(this);
-		skipButton.addActionListener(this);
-		
+		endTurnButton.addActionListener(this);
+
+		Font titleFont = new Font("Arial", Font.BOLD, 14);
+		selectPanelTitle.setFont(titleFont);
+		commandPanelTitle.setFont(titleFont);
+		cardPanelLabel.setFont(titleFont);
+
 		// Player Info panel
-		//playerInfoPanel.setPreferredSize(new Dimension(150, 0));
+		// playerInfoPanel.setPreferredSize(new Dimension(150, 0));
 		// rightToolbar.setLayout(new GridLayout(4,1,0,15));
 		playerInfoPanel.setBorder(LineBorder.createGrayLineBorder());
-		playerInfoPanel.setBackground(new Color(0x888888));		
+		playerInfoPanel.setBackground(new Color(0x888888));
 		mainPanel.setBackground(new Color(0x0));
-		
+
+		sourceCountryImageLabel.setBorder(LineBorder.createGrayLineBorder());
+		destCountryImageLabel.setBorder(LineBorder.createGrayLineBorder());
+
+		sourceCountryImageLabel.addMouseListener(this);
+
 		// Add components
 		this.add(mainPanel);
 		mainPanel.add(playerInfoPanel, BorderLayout.WEST);
@@ -227,25 +266,33 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		addComponent(mapWrapper, mapPanel, 0, 0, 1, 1, CENTER);
 		viewPanel.add(commandPanel, BorderLayout.SOUTH);
 		commandPanel.add(selectPanel, BorderLayout.WEST);
-		addComponent(selectPanel, selectPanelTitle, 0, 0, 1, 1, GridBagConstraints.NORTH);
-		addComponent(selectPanel, sourceCountryLabel, 0, 1, 1, 1, CENTER);
-		addComponent(selectPanel, sourceCountryPanel, 0, 2, 1, 1, CENTER);
-		addComponent(selectPanel, destCountryLabel, 0, 3, 1, 1, CENTER);
-		addComponent(selectPanel, destCountryPanel, 0, 4, 1, 1, CENTER);
+		selectPanel.setBorder(LineBorder.createBlackLineBorder());
+		addComponent(selectPanel, selectPanelTitle, 0, 0, 2, 1,
+				GridBagConstraints.NORTH);
+		addComponent(selectPanel, sourceCountryTitleLabel, 0, 1, 1, 1, CENTER);
+		addComponent(selectPanel, sourceCountryImageLabel, 0, 2, 1, 1, CENTER);
+		addComponent(selectPanel, sourceCountryNameLabel, 0, 3, 1, 1, CENTER);
+		addComponent(selectPanel, destCountryTitleLabel, 1, 1, 1, 1, CENTER);
+		addComponent(selectPanel, destCountryImageLabel, 1, 2, 1, 1, CENTER);
+		addComponent(selectPanel, destCountryNameLabel, 1, 3, 1, 1, CENTER);
 		commandPanel.add(actionPanel, BorderLayout.CENTER);
-		addComponent(actionPanel, commandPanelTitle, 0, 0, 1, 1, GridBagConstraints.NORTH);
+		addComponent(actionPanel, commandPanelTitle, 0, 0, 1, 1, CENTER);
 		addComponent(actionPanel, chooseSourceButton, 0, 1, 1, 1, CENTER);
 		addComponent(actionPanel, chooseDestButton, 0, 2, 1, 1, CENTER);
 		addComponent(actionPanel, draftUnitsButton, 0, 3, 1, 1, CENTER);
 		addComponent(actionPanel, attackButton, 0, 4, 1, 1, CENTER);
 		addComponent(actionPanel, fortifyButton, 0, 5, 1, 1, CENTER);
+		addComponent(actionPanel, endTurnButton, 0, 6, 1, 1, CENTER);
 		commandPanel.add(cardListPanel, BorderLayout.EAST);
-		addComponent(cardListPanel, cardPanelLabel, 0, 0, 1, 1, GridBagConstraints.NORTH);
+		addComponent(cardListPanel, cardPanelLabel, 0, 0, 1, 1,
+				GridBagConstraints.NORTH);
 		addComponent(cardListPanel, cardListScroll, 0, 1, 1, 1, CENTER);
 
+		mapPanel.addMouseListener(this);
+
 		mapWrapper.setBackground(new Color(0xbbccff));
-		sourceCountryPanel.setPreferredSize(new Dimension(20, 20));
-		destCountryPanel.setPreferredSize(new Dimension(20, 20));
+		// sourceCountryImage.setPreferredSize(new Dimension(20, 20));
+		// destCountryImage.setPreferredSize(new Dimension(20, 20));
 	}
 
 	private void initMenu() {
@@ -268,20 +315,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		this.setJMenuBar(menubar);
 	}
 
-	private void newGame() {
-		System.out.println();
-
-		Country curr = gameboard.N_AFRICA;
-		try {
-			Set<Country> neightbors = gameboard.getNeighbors(curr);
-			for (Country c : neightbors) {
-				System.out.println(c.getName());
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	/** Adds a component to a panel using the GridBagConstraints layout manager. */
 	private void addComponent(JPanel panel, JComponent component, int xPos,
 			int yPos, int width, int height, int align) {
@@ -295,6 +328,19 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		grid.fill = GridBagConstraints.NONE; // Resize component.
 		panel.add(component, grid); // Adds component to the grid to the panel.
 	} // End addComponent.
+
+	public BufferedImage readImage(String fileLocation) {
+		System.out.println("LOADING: " + fileLocation);
+		BufferedImage img = null;
+		try {
+			URL url = this.getClass().getClassLoader().getResource(fileLocation);
+			System.out.println(url.getPath());
+			img = ImageIO.read(url);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return img;
+	}
 
 	private class NewGameMenuListener implements ActionListener {
 		public void actionPerformed(ActionEvent event) {
@@ -331,6 +377,72 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		players.get(0).setColor(PlayerColors.BLUE.color());
 		playerPanel[0].updatePanel();
 		System.err.print("Changed");
+
+		if (gameState == State.ATTACK) {	
+			int p = mapPanel.getCurrPixel();
+			System.out.println("Val=" + p);
+			if (p != 0) {
+				Iterator<Country> it = gameboard.getTerritories().iterator();
+				while (it.hasNext()) {
+					Country c = (Country) it.next();
+					if (c.getColorVal() == p) {
+						if (lastButton != null) {	
+							if (lastButton == chooseSourceButton) {
+								if (c.getPlayer() == currPlayer) {
+									sourceCountry = c;
+									sourceCountryImageLabel.setIcon(c.getImage());
+									sourceCountryNameLabel.setText(c.getName());
+								} else {
+									chooseCountryErr();
+								}
+							} else if (lastButton == chooseDestButton) {
+								Set<Country> neightbors = null;
+								try {
+									neightbors = gameboard.getNeighbors(sourceCountry);
+								} catch (Exception ex) {
+									ex.printStackTrace();
+								}
+								if (neightbors.contains(c)) {	
+									if (c.getPlayer() != currPlayer) {
+										destCountry = c;
+										destCountryImageLabel.setIcon(c.getImage());
+										destCountryNameLabel.setText(c.getName());
+									} else {
+										chooseCountryErr();
+									}
+								} else {
+									String title = "Destination Choice Error";
+									String available = c.getName() + " is not an ajacent enemy country. \n\nAvailable countries to attack:";
+									
+									for (Country n : neightbors) {
+										if (n.getPlayer() != currPlayer)
+										available += ("\n - " + n.getName());
+									}
+									
+									JOptionPane.showMessageDialog(null, available, title,
+											JOptionPane.PLAIN_MESSAGE);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (e.getSource() == sourceCountryImageLabel) {
+			if (sourceCountry != null) {
+				String text = "Owner: " + sourceCountry.getPlayer().getName()
+						+ "\nArmy Size: " + sourceCountry.getArmySize();
+
+				JOptionPane.showMessageDialog(null, text, sourceCountry.getName(),
+						JOptionPane.PLAIN_MESSAGE);
+			}
+		}
+	}
+	
+	public void chooseCountryErr() {
+		JOptionPane.showMessageDialog(null, "You cannot pick this country!", "Error",
+				JOptionPane.ERROR_MESSAGE);
 	}
 
 	@Override
@@ -341,7 +453,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -358,9 +469,27 @@ public class App extends JFrame implements MouseListener, ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		lastButton = e.getSource();
 		// TODO Auto-generated method stub
 		if (e.getSource() == attackButton) {
 			System.out.println("Attack!");
+		}
+
+		if (e.getSource() == chooseSourceButton || e.getSource() == chooseDestButton) {
+			gameState = State.ATTACK;
+		}
+		
+		if (e.getSource() == endTurnButton) {
+			int messageType = JOptionPane.WARNING_MESSAGE;
+      String[] options = {"Yes", "No"};
+			int response = JOptionPane.showOptionDialog(this, "Are you sure?", "Warning: Ending Turn?!", 0, messageType, null, options, "No");
+			
+			if (response == 0) {
+				// Set up next player
+				nextPlayer();
+			} else {
+				JOptionPane.showMessageDialog(null, "Aborted Action!", "Hey!", JOptionPane.INFORMATION_MESSAGE);
+			}
 		}
 	}
 }

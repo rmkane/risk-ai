@@ -10,12 +10,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 
-public class MapPanel extends JPanel implements MouseListener {
+public class MapPanel extends JPanel implements MouseListener, Observer {
 
 	private static final long serialVersionUID = 1L;
 	private final int WIDTH = 800, HEIGHT = 409;
@@ -23,11 +25,13 @@ public class MapPanel extends JPanel implements MouseListener {
 	private BufferedImage map = readImage(filename);
 	private Board board;
 	private Font font = new Font("Verdana", Font.BOLD, 11);
+	private int currPixel;
 
 	public MapPanel(Board board) {
 		this.board = new Board();
 		this.addMouseListener(this);
 		setPreferredSize(new Dimension(WIDTH, HEIGHT));
+		currPixel = 0;
 
 		//printAllARGBDetails(map);
 	}
@@ -102,11 +106,16 @@ public class MapPanel extends JPanel implements MouseListener {
 		this.validate();
 		this.repaint();
 	}
+	
+	public int getCurrPixel() {
+		return this.currPixel;
+	}
 
 	@Override
 	public void mouseClicked(java.awt.event.MouseEvent e) {
 		// TODO Auto-generated method stub
 		getPixelInfo(map, e.getX(), e.getY());
+		this.currPixel = getPixelColor(map, e.getX(), e.getY());
 	}
 
 	@Override
@@ -131,5 +140,11 @@ public class MapPanel extends JPanel implements MouseListener {
 	public void mouseExited(java.awt.event.MouseEvent e) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
 	}
 }

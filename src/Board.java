@@ -31,14 +31,14 @@ public class Board {
 	
 	public static Continent N_AMERICA = new Continent("North America", new ArrayList<Country>(), 5);
 	public static Country ALASKA = new Country("Alaska", new Point(50, 41), 0xFF808000);
-	public static Country ALBERTA = new Country("Alberta",new Point(93, 69), 0xFFFFFF00);
+	public static Country ALBERTA = new Country("Alberta",new Point(93, 69), 0xFFF8F800);
 	public static Country C_AMERICA = new Country("Central America",new Point(84, 165), 0xFFFFFF80);
-	public static Country E_US = new Country("Eastern United States",new Point(136, 119), 0xFF808000);
+	public static Country E_US = new Country("Eastern United States",new Point(136, 119), 0xFF787800);
 	public static Country GREENLAND = new Country("Greenland",new Point(281, 20), 0xFFFFFF00);
 	public static Country NW_TERRITORY = new Country("Northwest Territory",new Point(105, 42), 0xFF505027);
 	public static Country ONTARIO = new Country("Ontario",new Point(145, 72), 0xFF949449);
-	public static Country QUEBEC = new Country("Quebec",new Point(197, 73), 0xFFFFFF80);
-	public static Country W_US = new Country("Western United States",new Point(78, 105), 0xFF505027);
+	public static Country QUEBEC = new Country("Quebec",new Point(197, 73), 0xFFF8F880);
+	public static Country W_US = new Country("Western United States",new Point(78, 105), 0xFF4f4f26);
 
 	public static Continent S_AMERICA = new Continent("South America", new ArrayList<Country>(), 2);
 	public static Country ARGENTINA = new Country("Argentina",new Point(189, 328), 0xFFFF0000);
@@ -49,33 +49,33 @@ public class Board {
 	public static Continent EUROPE = new Continent("Europe", new ArrayList<Country>(), 5);
 	public static Country GREAT_BRITAIN = new Country("Great Britain", new Point(323, 77), 0xFF004080);
 	public static Country ICELAND = new Country("Iceland", new Point(308, 51), 0xFF0000FF);
-	public static Country N_EUROPE = new Country("Northern Europe", new Point(390, 79), 0xFF0000FF);
+	public static Country N_EUROPE = new Country("Northern Europe", new Point(390, 79), 0xFF0000FE);
 	public static Country SCANDINAVIA = new Country("Scandinavia", new Point(390, 51), 0xFF0080FF);
-	public static Country S_EUROPE = new Country("Southern Europe", new Point(412, 100), 0xFF004080);
+	public static Country S_EUROPE = new Country("Southern Europe", new Point(412, 100), 0xFF003F7F);
 	public static Country UKRAINE = new Country("Ukraine", new Point(449, 67), 0xFF000080);
-	public static Country W_EUROPE = new Country("Western Europe", new Point(345, 110), 0xFF0080FF);
+	public static Country W_EUROPE = new Country("Western Europe", new Point(345, 110), 0xFF007FFE);
 
 	public static Continent AFRICA = new Continent("Africa", new ArrayList<Country>(), 3);
 	public static Country CONGO = new Country("Congo", new Point(411, 226), 0xFFAE5700);
 	public static Country E_AFRICA = new Country("East Africa", new Point(448, 193), 0xFFFF8000);
 	public static Country EGYPT = new Country("Egypt", new Point(410, 150), 0xFF804000);
-	public static Country MADAGASCAR = new Country("Madagascar", new Point(496, 293), 0xFFAE5700);
+	public static Country MADAGASCAR = new Country("Madagascar", new Point(496, 293), 0xFFAD5600);
 	public static Country N_AFRICA = new Country("North Africa", new Point(358, 175), 0xFFFF915B);
-	public static Country S_AFRICA = new Country("South Africa", new Point(414, 288), 0xFF804000);
+	public static Country S_AFRICA = new Country("South Africa", new Point(414, 288), 0xFF7f3f00);
 
 	public static Continent ASIA = new Continent("Asia", new ArrayList<Country>(), 7);
 	public static Country AFGHANISTAN = new Country("Afghanistan", new Point(515, 94), 0xFF80FF80);
 	public static Country CHINA = new Country("China", new Point(635, 135), 0xFF008040);
 	public static Country INDIA = new Country("India", new Point(563, 159), 0xFF008080);
-	public static Country IRKUTSK = new Country("Irkutsk", new Point(608, 67), 0xFF80FF00);
+	public static Country IRKUTSK = new Country("Irkutsk", new Point(608, 67), 0xFF7FFE00);
 	public static Country JAPAN = new Country("Japan", new Point(725, 126), 0xFF80FF00);
-	public static Country KAMCHATKA = new Country("Kamchatka",new Point(696, 41), 0xFF008040);
+	public static Country KAMCHATKA = new Country("Kamchatka",new Point(696, 41), 0xFF007F3F);
 	public static Country MIDDLE_EAST = new Country("Middle East",new Point(465, 148), 0xFF008000);
 	public static Country MONGOLIA = new Country("Mongolia",new Point(619, 97), 0xFF004000);
-	public static Country SIAM = new Country("Siam",new Point(627, 182), 0xFF80FF80);
-	public static Country SIBERIA = new Country("Siberia",new Point(553, 38), 0xFF008000);
-	public static Country URAL = new Country("Ural",new Point(510, 52), 0xFF004000);
-	public static Country YAKUTSK = new Country("Yakutsk",new Point(619, 40), 0xFF008080);
+	public static Country SIAM = new Country("Siam",new Point(627, 182), 0xFF7FFE7F);
+	public static Country SIBERIA = new Country("Siberia",new Point(553, 38), 0xFF007F00);
+	public static Country URAL = new Country("Ural",new Point(510, 52), 0xFF003F00); // Change this dark-green (Mongolia)
+	public static Country YAKUTSK = new Country("Yakutsk",new Point(619, 40), 0xFF007F7F);
 
 	public static Continent OCEANIA = new Continent("Oceania", new ArrayList<Country>(), 2);
 	public static Country E_AUSTRALIA = new Country("Eastern Australia",new Point(739, 308), 0xFF400040);
@@ -231,6 +231,8 @@ public class Board {
 			territories.addEdge(GREENLAND, QUEBEC);
 			territories.addEdge(GREENLAND, ICELAND);
 			territories.addEdge(NW_TERRITORY, ONTARIO);
+			territories.addEdge(ONTARIO, QUEBEC);
+			territories.addEdge(ONTARIO, W_US);
 			
 			territories.addEdge(ARGENTINA, BRAZIL);
 			territories.addEdge(ARGENTINA, PERU);
@@ -318,5 +320,11 @@ public class Board {
 	        Node nValue = (Node) nlList.item(0);
 	 
 		return nValue.getNodeValue();
-	  }
+	}
+	
+	public static void main(String[] args) {
+		new Board();
+	}
+	
 }
+
