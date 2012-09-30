@@ -85,7 +85,7 @@ public class Country implements Comparable<Country>{
 		BufferedImage img = null;
 		try {
 			URL url = this.getClass().getClassLoader().getResource(fileLocation);
-			System.out.println(url.getPath());
+			//System.out.println(url.getPath());
 			img = ImageIO.read(url);
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -40,7 +40,7 @@ public class MapPanel extends JPanel implements MouseListener, Observer {
 	public void paintComponent(Graphics g) {
 		g.drawImage(map, 0, 0, this.getWidth(), this.getHeight(), this);
 
-		for (Continent continent : board.WORLD) {
+		for (Continent continent : board.getWorld()) {
 			for (Country country : continent.getCountries()) {
 				Player player = country.getPlayer();
 				Color playerColor = player.getColor();
@@ -103,7 +103,7 @@ public class MapPanel extends JPanel implements MouseListener, Observer {
 	}
 	
 	public void update() {
-		this.validate();
+		this.revalidate();
 		this.repaint();
 	}
 	

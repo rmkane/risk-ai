@@ -18,7 +18,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -95,16 +98,17 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private Board gameboard;
 	private Deck cards;
 	private int turn;
+	private boolean capturedTerritory = false;
 	
 	private Player currPlayer;
 	
-	private enum State {DRAFT, ATTACK, FORTIFY, END};
+	private enum State {START, DRAFT, ATTACK, FORTIFY, END};
 	private State gameState;
 
 	// private Deck territories;
 
 	public App() {
-		gameState = State.DRAFT;
+		gameState = State.START;
 		lastButton = null;
 		// Create Board
 		this.gameboard = new Board();
@@ -112,31 +116,53 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		currPlayer = players.get(turn %2);
 		dealCards();
 		assignTerritories();
-		System.out.println(players);
+		//System.out.println(players);
 		this.turn = 0;
 		initGUI();
-
-		// Add players to the playerPanel and update
-		for (int i = 0; i < players.size(); i++) {
-			playerPanel[i].addPlayer(players.get(i));
-			playerPanel[i].updatePanel();
+		initialArmyPlacement();
+		
+		while (turn*players.size() < 20) {
+			capturedTerritory = false;
+			if (gameState == State.DRAFT) {
+				int territoryBonus = (int) Math.floor(currPlayer.getTerritories().size() / 3);
+				int continentBonus = 0;
+				for (Continent continent : gameboard.getWorld()) {
+					boolean found = false;
+					Iterator<Country> it = continent.getCountries().iterator();
+					while (it.hasNext() && found == false) {
+						Country country = it.next();
+						if (currPlayer.getTerritories().contains(country)) {
+							found = true;
+						}
+					}
+					if (found == true) {
+						territoryBonus += continent.getBonusArmies();
+					}
+				}
+				currPlayer.setDraftedArmies(currPlayer.getDraftedArmies() + territoryBonus + continentBonus);
+			}
+			if (gameState == State.ATTACK) {
+				
+			}
+			if (gameState == State.FORTIFY) {
+				
+			}
 		}
+		
 
 		// Test update by removing 7 of player 1's territories
-		for (int i = 0; i < 7; i++) {
-			Player HUMAN = players.get(0);
-			Player AI = players.get(1);
-			Country country = HUMAN.getTerritories().get(0);
-			// Simulate losing a territory
-			HUMAN.loseBattle(country, AI, 3);
-		}
-		playerPanel[0].updatePanel();
-		playerPanel[1].updatePanel();
-		mapPanel.update();
+//		for (int i = 0; i < 7; i++) {
+//			Player HUMAN = players.get(0);
+//			Player AI = players.get(1);
+//			Country country = HUMAN.getTerritories().get(0);
+//			// Simulate losing a territory
+//			HUMAN.loseBattle(country, AI, 3);
+//		}
+//		playerPanel[0].updatePanel();
+//		playerPanel[1].updatePanel();
+//		mapPanel.update();
 
 		// newGame();
-
-		mainPanel.addMouseListener(this);
 	}
 
 	/** Create players */
@@ -149,7 +175,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	}
 
 	/** Create a new deck and deal cards out to players */
-	public void dealCards() {
+	private void dealCards() {
 		this.cards = new Deck();
 		for (int i = 0; cards.deckSize() > 0; i++) {
 			players.get(i % players.size()).getHand().add(cards.draw());
@@ -157,9 +183,9 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	}
 
 	/** Based on the cards that players have, assign them territories */
-	public void assignTerritories() {
+	private void assignTerritories() {
 		for (Player player : players) {
-			for (Continent continent : gameboard.WORLD) {
+			for (Continent continent : gameboard.getWorld()) {
 				for (Country country : continent.getCountries()) {
 					for (Card card : player.getHand()) {
 						if (country.getName().equalsIgnoreCase(card.getCountryName())) {
@@ -172,6 +198,23 @@ public class App extends JFrame implements MouseListener, ActionListener {
 					}
 				}
 			}
+		}
+	}
+	
+	private void initialArmyPlacement() {
+		if (gameState == State.START) {
+			for (int i = 1; i < players.size(); i++) {
+				while(players.get(i).getDraftedArmies() > 0) {
+					int rand = (int)(Math.random()*players.get(i).getTerritories().size());
+					players.get(i).draftUnits(1, players.get(i).getTerritories().get(rand));
+				}
+			}
+			//System.out.println(players.get(1).getArmySize());
+			while (players.get(0).getDraftedArmies() > 0) {
+				// Allow player 1 to place remaining draftable armies.
+			}
+			JOptionPane.showMessageDialog(null, "Get Ready" + currPlayer.getName(), "RISK", JOptionPane.PLAIN_MESSAGE);
+			gameState = State.DRAFT;
 		}
 	}
 	
@@ -230,7 +273,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				"Card 4", "Card 5" });
 		cardListScroll = new JScrollPane(cardList);
 
-		// Add ActionListeners
+		// Add Listeners
+		mainPanel.addMouseListener(this);
 		chooseSourceButton.addActionListener(this);
 		chooseDestButton.addActionListener(this);
 		draftUnitsButton.addActionListener(this);
@@ -293,6 +337,12 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		mapWrapper.setBackground(new Color(0xbbccff));
 		// sourceCountryImage.setPreferredSize(new Dimension(20, 20));
 		// destCountryImage.setPreferredSize(new Dimension(20, 20));
+		
+	// Add players to the playerPanel and update
+			for (int i = 0; i < players.size(); i++) {
+				playerPanel[i].addPlayer(players.get(i));
+				playerPanel[i].updatePanel();
+			}
 	}
 
 	private void initMenu() {
@@ -314,6 +364,13 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		about.addActionListener(new AboutMenuListener());
 		this.setJMenuBar(menubar);
 	}
+	
+	private void updateGUI() {
+		for (PlayerPanel p : playerPanel)
+			p.updatePanel();
+		mapPanel.update();
+		this.repaint();		
+	}
 
 	/** Adds a component to a panel using the GridBagConstraints layout manager. */
 	private void addComponent(JPanel panel, JComponent component, int xPos,
@@ -327,14 +384,14 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		grid.insets = new Insets(3, 3, 3, 3); // Add space between components.
 		grid.fill = GridBagConstraints.NONE; // Resize component.
 		panel.add(component, grid); // Adds component to the grid to the panel.
-	} // End addComponent.
+	}
 
 	public BufferedImage readImage(String fileLocation) {
 		System.out.println("LOADING: " + fileLocation);
 		BufferedImage img = null;
 		try {
 			URL url = this.getClass().getClassLoader().getResource(fileLocation);
-			System.out.println(url.getPath());
+			//System.out.println(url.getPath());
 			img = ImageIO.read(url);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -370,59 +427,75 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		System.err.println(obj);
 	}
 
+	public Country getSelectedCountry(int pixel) {
+		if (pixel != 0) {
+			Iterator<Country> it = gameboard.getTerritories().iterator();
+			while (it.hasNext()) {
+				Country country = (Country) it.next();
+				if (country.getColorVal() == pixel) {
+					return country;
+				}
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		// JOptionPane.showMessageDialog(this, "Message", "Title",
 		// JOptionPane.INFORMATION_MESSAGE);
-		players.get(0).setColor(PlayerColors.BLUE.color());
-		playerPanel[0].updatePanel();
+		//players.get(0).setColor(PlayerColors.BLUE.color());
 		System.err.print("Changed");
+		
+		if (gameState == State.START) {
+			int p = mapPanel.getCurrPixel();
+			Country c = getSelectedCountry(p);
+			if (c != null) {
+				if (c.getPlayer() == currPlayer) {
+					currPlayer.draftUnits(1, c);
+					updateGUI();
+				}
+			}
+		}
 
 		if (gameState == State.ATTACK) {	
 			int p = mapPanel.getCurrPixel();
-			System.out.println("Val=" + p);
-			if (p != 0) {
-				Iterator<Country> it = gameboard.getTerritories().iterator();
-				while (it.hasNext()) {
-					Country c = (Country) it.next();
-					if (c.getColorVal() == p) {
-						if (lastButton != null) {	
-							if (lastButton == chooseSourceButton) {
-								if (c.getPlayer() == currPlayer) {
-									sourceCountry = c;
-									sourceCountryImageLabel.setIcon(c.getImage());
-									sourceCountryNameLabel.setText(c.getName());
-								} else {
-									chooseCountryErr();
-								}
-							} else if (lastButton == chooseDestButton) {
-								Set<Country> neightbors = null;
-								try {
-									neightbors = gameboard.getNeighbors(sourceCountry);
-								} catch (Exception ex) {
-									ex.printStackTrace();
-								}
-								if (neightbors.contains(c)) {	
-									if (c.getPlayer() != currPlayer) {
-										destCountry = c;
-										destCountryImageLabel.setIcon(c.getImage());
-										destCountryNameLabel.setText(c.getName());
-									} else {
-										chooseCountryErr();
-									}
-								} else {
-									String title = "Destination Choice Error";
-									String available = c.getName() + " is not an ajacent enemy country. \n\nAvailable countries to attack:";
-									
-									for (Country n : neightbors) {
-										if (n.getPlayer() != currPlayer)
-										available += ("\n - " + n.getName());
-									}
-									
-									JOptionPane.showMessageDialog(null, available, title,
-											JOptionPane.PLAIN_MESSAGE);
-								}
+			Country c = getSelectedCountry(p);
+			if (c != null) {
+				if (lastButton != null) {	
+					if (lastButton == chooseSourceButton) {
+						if (c.getPlayer() == currPlayer) {
+							sourceCountry = c;
+							sourceCountryImageLabel.setIcon(c.getImage());
+							sourceCountryNameLabel.setText(c.getName());
+						} else {
+							chooseCountryErr();
+						}
+					} else if (lastButton == chooseDestButton) {
+						Set<Country> neightbors = null;
+						try {
+							neightbors = gameboard.getNeighbors(sourceCountry);
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+						if (neightbors.contains(c)) {	
+							if (c.getPlayer() != currPlayer) {
+								destCountry = c;
+								destCountryImageLabel.setIcon(c.getImage());
+								destCountryNameLabel.setText(c.getName());
+							} else {
+								chooseCountryErr();
 							}
+						} else {
+							String title = "Destination Choice Error";
+							String available = c.getName() + " is not an ajacent enemy country. \n\nAvailable countries to attack:";
+							for (Country n : neightbors) {
+								if (n.getPlayer() != currPlayer)
+								available += String.format("\n - %s (%s)", n.getName(), n.getPlayer().getName());
+							}
+							
+							JOptionPane.showMessageDialog(null, available, title,
+									JOptionPane.PLAIN_MESSAGE);
 						}
 					}
 				}
@@ -487,6 +560,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			if (response == 0) {
 				// Set up next player
 				nextPlayer();
+				String text = String.format("Player: %s - It's your turn!", currPlayer.getName());
+				JOptionPane.showMessageDialog(null, text, "Next Turn", JOptionPane.INFORMATION_MESSAGE);
 			} else {
 				JOptionPane.showMessageDialog(null, "Aborted Action!", "Hey!", JOptionPane.INFORMATION_MESSAGE);
 			}

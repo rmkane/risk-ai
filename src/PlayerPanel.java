@@ -80,7 +80,7 @@ public class PlayerPanel extends JPanel {
 		draftedUnits.setText("Drafted Units: " + player.getDraftedArmies());
 		territoriesList.ensureIndexIsVisible(territoriesList.getSelectedIndex());
 		territoriesList.setListData(player.getTerritoriesByName());
-		territoriesList.validate();
+		territoriesList.revalidate();
 		territoriesList.repaint();
 	}
 	

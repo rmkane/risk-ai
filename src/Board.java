@@ -301,6 +301,10 @@ public class Board {
 		}
 	}
 	
+	public ArrayList<Continent> getWorld() {
+		return WORLD;
+	}
+	
 	public Iterable<Country> getTerritories() {
 		return territories.getNodes();
 	}
