@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.DecimalFormat;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -16,6 +17,7 @@ public class Country implements Comparable<Country>{
 	private Point point;
 	private int colorVal;
 	private ImageIcon image;
+	private float weight;
 	
 	public Country() {
 		this.name = "";
@@ -24,6 +26,7 @@ public class Country implements Comparable<Country>{
 		this.point = new Point();
 		this.colorVal = 0x0;
 		this.image = null;
+		this.weight = 0;
 	}
 
 	public Country(String name) {
@@ -33,6 +36,7 @@ public class Country implements Comparable<Country>{
 		this.point = new Point();
 		this.colorVal = 0x0;
 		setImage(name);
+		this.weight = 0;
 	}
 	
 	public Country(String name, Point point, int colorVal) {
@@ -42,6 +46,7 @@ public class Country implements Comparable<Country>{
 		this.point = point;
 		this.colorVal = colorVal;
 		setImage(name);
+		this.weight = 0;
 	}
 
 	public String getName() {
@@ -97,8 +102,23 @@ public class Country implements Comparable<Country>{
 		return image;
 	}
 	
+	public float getWeight() {
+		return weight;
+	}
+
+	public void setWeight(float weight) {
+		this.weight = weight;
+	}
+
 	@Override
   public int compareTo(Country country) {
     return getName().compareTo(country.getName());
   }
+
+	@Override
+	public String toString() {
+		DecimalFormat df = new DecimalFormat("#,###,##0.00");
+		
+		return String.format("Name: %-24sWeight: %10s", name, df.format(weight));
+	}
 }

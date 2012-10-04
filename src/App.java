@@ -116,10 +116,15 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		currPlayer = players.get(turn %2);
 		dealCards();
 		assignTerritories();
-		//System.out.println(players);
+		//System.out.println(gameboard);
 		this.turn = 0;
 		initGUI();
 		initialArmyPlacement();
+		
+		gameboard.setWeightsHard(players.get(1), players.get(0), players.get(2));
+		for (Country c : gameboard.getTerritories()) {
+			System.out.println(">>" + c);
+		}
 		
 		while (turn*players.size() < 20) {
 			capturedTerritory = false;
@@ -203,16 +208,16 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	
 	private void initialArmyPlacement() {
 		if (gameState == State.START) {
-			for (int i = 1; i < players.size(); i++) {
+			for (int i = 0; i < players.size(); i++) {
 				while(players.get(i).getDraftedArmies() > 0) {
 					int rand = (int)(Math.random()*players.get(i).getTerritories().size());
 					players.get(i).draftUnits(1, players.get(i).getTerritories().get(rand));
 				}
 			}
 			//System.out.println(players.get(1).getArmySize());
-			while (players.get(0).getDraftedArmies() > 0) {
+			//while (players.get(0).getDraftedArmies() > 0) {
 				// Allow player 1 to place remaining draftable armies.
-			}
+			//}
 			JOptionPane.showMessageDialog(null, "Get Ready" + currPlayer.getName(), "RISK", JOptionPane.PLAIN_MESSAGE);
 			gameState = State.DRAFT;
 		}
