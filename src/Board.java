@@ -329,26 +329,30 @@ public class Board {
 	
 	private String getTagValue(String sTag, Element eElement) {
 		NodeList nlList = eElement.getElementsByTagName(sTag).item(0).getChildNodes();
-	 
-	        Node nValue = (Node) nlList.item(0);
-	 
-		return nValue.getNodeValue();
+	  Node nValue = (Node) nlList.item(0);
+	  return nValue.getNodeValue();
 	}
 	
-	public void setWeightsEasy() {
-		for (Country territory : territories) {
+	public void setWeightsEasy(Player A, Player H, Player N) {
+		for (Country c0 : territories) {
 			float weight = 0;
-			int tu = territory.getArmySize();
-			Iterator<Country> it = getNeighbors(territory).iterator();
+			int u0 = c0.getArmySize();
+			Player p0 = c0.getPlayer();
+			Iterator<Country> it = getNeighbors(c0).iterator();
 			while(it.hasNext()) {
-				Country c = (Country)it.next();
-				boolean is_enemy = (c.getPlayer() != territory.getPlayer());
-				int cu = c.getArmySize();
-				float ratio = (float)(cu)/tu;
-				weight += (is_enemy) ? 1 * ratio : 0;
-				//weight += 1;
+				Country c1 = (Country)it.next();
+				c1 = (c1 == c0) ? (Country)it.next() : c1;
+				Player p1 = c1.getPlayer();
+				int u1 = c1.getArmySize();
+				float ratio0 = p1 != p0 ? (((float)u1/u0) * 10) : 0;
+				int priority = /* Calculate the threat level for the current country. */
+						/*.*[      -- if AI --   ][    -- if Human --    ][    -- if Neutral --  ]*.....*/ //
+							  (p0 == A && p1 == H) || (p0 == H && p1 == A) || (p0 == N && p1 != N) ? 3 /*.*/ //
+						  : (p0 == A && p1 == N) || (p0 == H && p1 == N) || (p0 == N && p1 != N) ? 2 /*.*/ //
+						  : (p0 == A && p1 == A) || (p0 == H && p1 == H) || (p0 == N && p1 == N) ? 1 : 0;
+				weight += priority * ratio0;
 			}
-			territory.setWeight(weight);
+			c0.setWeight(weight);
 		}
 	}
 	
@@ -372,15 +376,15 @@ public class Board {
 					int u2 = c2.getArmySize();
 					float ratio1 = p2 != p1 ? (float)(u2)/u1 : 0;
 					int priority = /* Calculate the threat level for the current country. */
-					/*.*[         -- if AI --           ][       -- if Human --            ][           -- if Neutral --      ]*.....*/
-							(p0 == A && p1 == H && p2 == H) || (p0 == H && p1 == A && p2 == A) || (p0 == N && p1 != N && p2 != N) ? 9 /*.*/
-					  : (p0 == A && p1 == H && p2 == N) || (p0 == H && p1 == A && p2 == N) /*..............................*/ ? 8 /*.*/
-					  : (p0 == A && p1 == N && p2 == H) || (p0 == H && p1 == N && p2 == A) /*..............................*/ ? 7 /*.*/
-					  : (p0 == A && p1 == N && p2 == N) || (p0 == H && p1 == N && p2 == N) /*..............................*/ ? 6 /*.*/
-					  : (p0 == A && p1 == H && p2 == A) || (p0 == H && p1 == A && p2 == H) || (p0 == N && p1 != N && p2 == N) ? 5 /*.*/
-					  : (p0 == A && p1 == N && p2 == A) || (p0 == H && p1 == N && p2 == H) /*..............................*/ ? 4 /*.*/
-					  : (p0 == A && p1 == A && p2 == H) || (p0 == H && p1 == H && p2 == A) /*..............................*/ ? 3 /*.*/
-					  : (p0 == A && p1 == A && p2 == N) || (p0 == H && p1 == H && p2 == N) /*..............................*/ ? 2 /*.*/
+					/*.*[         -- if AI --           ][       -- if Human --            ][           -- if Neutral --      ]*.....*/ //
+						  (p0 == A && p1 == H && p2 == H) || (p0 == H && p1 == A && p2 == A) || (p0 == N && p1 != N && p2 != N) ? 9 /*.*/ //
+					  : (p0 == A && p1 == H && p2 == N) || (p0 == H && p1 == A && p2 == N) /*..............................*/ ? 8 /*.*/ //
+					  : (p0 == A && p1 == N && p2 == H) || (p0 == H && p1 == N && p2 == A) /*..............................*/ ? 7 /*.*/ //
+					  : (p0 == A && p1 == N && p2 == N) || (p0 == H && p1 == N && p2 == N) /*..............................*/ ? 6 /*.*/ //
+					  : (p0 == A && p1 == H && p2 == A) || (p0 == H && p1 == A && p2 == H) || (p0 == N && p1 != N && p2 == N) ? 5 /*.*/ //
+					  : (p0 == A && p1 == N && p2 == A) || (p0 == H && p1 == N && p2 == H) /*..............................*/ ? 4 /*.*/ //
+					  : (p0 == A && p1 == A && p2 == H) || (p0 == H && p1 == H && p2 == A) /*..............................*/ ? 3 /*.*/ //
+					  : (p0 == A && p1 == A && p2 == N) || (p0 == H && p1 == H && p2 == N) /*..............................*/ ? 2 /*.*/ //
 					  : (p0 == A && p1 == A && p2 == A) || (p0 == H && p1 == H && p2 == H) || (p0 == N && p1 == N && p2 == N) ? 1 : 0;
 					weight += priority * (ratio0 + ratio1);
 				}

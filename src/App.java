@@ -121,7 +121,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		initGUI();
 		initialArmyPlacement();
 		
-		gameboard.setWeightsHard(players.get(1), players.get(0), players.get(2));
+		
 		for (Country c : gameboard.getTerritories()) {
 			System.out.println(">>" + c);
 		}
@@ -175,7 +175,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		// Create Players
 		this.players = new ArrayList<Player>();
 		players.add(new Player("Human", PlayerColors.GREEN, 80));
-		players.add(new Player("Computer", PlayerColors.RED, 80));
+		players.add(new PlayerAI("Computer", PlayerColors.RED, 80));
 		players.add(new Player("Neutral", PlayerColors.GRAY, 40));
 	}
 
@@ -185,6 +185,10 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		for (int i = 0; cards.deckSize() > 0; i++) {
 			players.get(i % players.size()).getHand().add(cards.draw());
 		}
+	}
+	
+	private void adjust() {
+		gameboard.setWeightsEasy(players.get(1), players.get(0), players.get(2));
 	}
 
 	/** Based on the cards that players have, assign them territories */
@@ -208,16 +212,30 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	
 	private void initialArmyPlacement() {
 		if (gameState == State.START) {
-			for (int i = 0; i < players.size(); i++) {
-				while(players.get(i).getDraftedArmies() > 0) {
-					int rand = (int)(Math.random()*players.get(i).getTerritories().size());
-					players.get(i).draftUnits(1, players.get(i).getTerritories().get(rand));
+			for (int i = 1; i < players.size(); i++) {
+				adjust(); // Make sure the Neutral player knows where to place units in relation to AI
+				Player p = players.get(i);
+				int ida = p.getDraftedArmies();
+				ArrayList<Country> l = p.getTerritories();
+				float tw = 0;
+				for (Country c : l) {
+					tw += c.getWeight();
+				}				
+				while(p.getDraftedArmies() > 0) {
+					for (Country c : l) {
+						int draftable = (int)((c.getWeight()/tw) * ida);
+						draftable = (draftable > p.getDraftedArmies()) ? p.getDraftedArmies() : draftable;
+						p.draftUnits(draftable, c);
+					}
 				}
+				
 			}
-			//System.out.println(players.get(1).getArmySize());
-			//while (players.get(0).getDraftedArmies() > 0) {
+			updateGUI();
+			System.out.println(players.get(1).getArmySize());
+			while (players.get(0).getDraftedArmies() > 0) {
 				// Allow player 1 to place remaining draftable armies.
-			//}
+				
+			}
 			JOptionPane.showMessageDialog(null, "Get Ready" + currPlayer.getName(), "RISK", JOptionPane.PLAIN_MESSAGE);
 			gameState = State.DRAFT;
 		}
@@ -274,7 +292,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		endTurnButton = new JButton("End Turn");
 		cardListPanel = new JPanel(new GridBagLayout());
 		cardPanelLabel = new JLabel("Hand");
-		cardList = new JList<>(new String[] { "Card 1", "Card 2", "Card 3",
+		cardList = new JList<String>(new String[] { "Card 1", "Card 2", "Card 3",
 				"Card 4", "Card 5" });
 		cardListScroll = new JScrollPane(cardList);
 
@@ -340,8 +358,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		mapPanel.addMouseListener(this);
 
 		mapWrapper.setBackground(new Color(0xbbccff));
-		// sourceCountryImage.setPreferredSize(new Dimension(20, 20));
-		// destCountryImage.setPreferredSize(new Dimension(20, 20));
+		//sourceCountryImageLabel.setPreferredSize(new Dimension(20, 20));
+		//destCountryImageLabel.setPreferredSize(new Dimension(20, 20));
 		
 	// Add players to the playerPanel and update
 			for (int i = 0; i < players.size(); i++) {

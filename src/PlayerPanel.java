@@ -38,7 +38,7 @@ public class PlayerPanel extends JPanel {
 		playerName = new JLabel("Player X");
 		armySizeLabel = new JLabel("Army Size: 0");
 		draftedUnits = new JLabel("Drafted Units: 0");
-		territoriesList = new JList<>(new String[] {"Country 1", "Country 2", "Country 3"});
+		territoriesList = new JList<String>(new String[] {"Country 1", "Country 2", "Country 3"});
 		playerName.setFont(new Font("Serif", Font.BOLD, 14));
 		
 		mainPanel = new JPanel();

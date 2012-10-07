@@ -2,7 +2,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Player {
+public class Player implements PlayerActions {
 
 	private String name;
 	private Color color;
@@ -132,5 +132,23 @@ public class Player {
 				+ ", draftedArmies=" + draftedArmies + ", armySize=" + armySize
 				+ ", territories=" + territories + ", territoriesByName="
 				+ territoriesByName + ", hand=" + hand + "]";
+	}
+
+	@Override
+	public void draft() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void attack() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void fortify() {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -47,13 +47,13 @@ public class Die {
 	public static void main(String[] args) {
 
 		// Number starting of units
-		int attackerUnits = 30;
-		int defenderUnits = 20;
+		int attackerUnits = 20;
+		int defenderUnits = 30;
 
 		// Store wins
 		int attack = 0, defend = 0;
 
-		while (attackerUnits > 1 || defenderUnits >= 0) {
+		while (attackerUnits > 1 && defenderUnits > 0) {
 
 			int attackerDice = attackerUnits > 3 ? 3 : 2;
 			int defenderDice = defenderUnits > 1 ? 2 : 1;
