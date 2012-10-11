@@ -392,6 +392,14 @@ public class Board {
 			c0.setWeight(weight);
 		}
 	}
+	
+	public void printWeights() {
+		System.out.println("[WEIGHTS:]--------------------------------------");
+		for (Country c : territories) {
+			System.out.println(c);
+		}
+		System.out.println("-\\-/-\\-/-\\-/-\\-/-\\-/-\\-/-\\-/-\\-/-\\-/-\\-/-\\-/-\\-/-\n");
+	}
 
 	public static void main(String[] args) {
 		new Board();
