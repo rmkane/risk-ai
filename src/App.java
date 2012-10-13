@@ -51,7 +51,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private final int CENTER = GridBagConstraints.CENTER;
 	private static int WIDTH = 1024, HEIGHT = 728;
 	private final Dimension SIZE = new Dimension(WIDTH, HEIGHT);
-	
+
 	private final String END_DRAFT = "End Draft Phase";
 	private final String END_ATTACK = "End Attack Phase";
 	private final String END_FORTIFY = "End Fortify Phase";
@@ -86,28 +86,32 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private JLabel commandPanelTitle;
 	private JButton chooseSourceButton;
 	private JButton chooseDestButton;
-	private JButton attackButton;
+	private JButton actionButton;
 	private JButton endPhaseButton;
 	private JPanel cardListPanel;
 	private JLabel cardPanelLabel;
 	private JList<String> cardList;
 	private JScrollPane cardListScroll;
-	private ImageIcon defaultIcon = new ImageIcon(readImage("resources/default.png"));
+	private ImageIcon defaultIcon = new ImageIcon(
+			readImage("resources/default.png"));
 
 	private Country sourceCountry;
 	private Country destCountry;
 
 	private Object lastButton;
-	
+
 	private ArrayList<Player> players;
 	private Board gameboard;
 	private Deck deck;
 	private int turn;
 	private boolean capturedTerritory = false;
-	
+
 	private Player currPlayer;
-	
-	private enum State {DRAFT, ATTACK, FORTIFY, END};
+
+	private enum State {
+		DRAFT, ATTACK, FORTIFY, END
+	};
+
 	private State gameState;
 
 	// private Deck territories;
@@ -125,12 +129,12 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		initialArmyPlacement();
 		takeTurn();
 	}
-		
-		
+
 	private void draft() {
 		if (gameState == State.DRAFT) {
 			/** Territory Bonus */
-			int territoryBonus = (int) Math.floor(currPlayer.getTerritories().size() / 3);
+			int territoryBonus = (int) Math
+					.floor(currPlayer.getTerritories().size() / 3);
 			System.out.print("Territory");
 			/** Continent Bonus */
 			int continentBonus = 0;
@@ -139,9 +143,11 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				Iterator<Country> it = continent.getCountries().iterator();
 				while (it.hasNext() && contains) {
 					Country country = it.next();
-					if (!(currPlayer.getTerritories().contains(country))) contains = false;
+					if (!(currPlayer.getTerritories().contains(country)))
+						contains = false;
 				}
-				if (contains)	continentBonus += continent.getBonusArmies();
+				if (contains)
+					continentBonus += continent.getBonusArmies();
 			}
 			System.out.print("Continent");
 			/** Cash-in Bonus */
@@ -150,22 +156,24 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			ArrayList<Card> cards = currPlayer.getHand();
 			if (cards.size() > 2) {
 				int[] check = new int[4];
-				for (Card c : cards) check[c.getUnitType().id()]++;
+				for (Card c : cards)
+					check[c.getUnitType().id()]++;
 				int count = 0;
 				for (int i : check) {
 					if (i > 2) {
 						for (Card c0 : cards) {
 							if (c0.getUnitType().id() == i) {
 								if (currPlayer.getTerritories().contains(c0)) {
-									if (match_bonus == 0)	match_bonus = 2;
+									if (match_bonus == 0)
+										match_bonus = 2;
 								}
 								deck.addToDiscard(c0);
 								currPlayer.getHand().remove(c0);
 							}
 						}
 						break;
-					}
-					else if (i > 0) count++;
+					} else if (i > 0)
+						count++;
 				}
 				if (count > 2) {
 					for (int k : check) {
@@ -173,7 +181,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 							for (Card c0 : cards) {
 								if (c0.getUnitType().id() == k) {
 									if (currPlayer.getTerritories().contains(c0)) {
-										if (match_bonus == 0)	match_bonus = 2;
+										if (match_bonus == 0)
+											match_bonus = 2;
 									}
 									deck.addToDiscard(c0);
 									currPlayer.getHand().remove(c0);
@@ -182,30 +191,43 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						}
 					}
 				}
-			}				
-			currPlayer.setDraftedArmies(currPlayer.getDraftedArmies() + 
-					territoryBonus + continentBonus + cash_inBonus + match_bonus);
+			}
+			currPlayer.setDraftedArmies(currPlayer.getDraftedArmies()
+					+ territoryBonus + continentBonus + cash_inBonus + match_bonus);
 			updateGUI();
 		}
 	}
-		
-		
-		public void takeTurn() {
-			currPlayer = players.get(turn % 2);
-			JOptionPane.showMessageDialog(null, "Get Ready " + currPlayer.getName(), "RISK", JOptionPane.PLAIN_MESSAGE);
-			sourceCountryImageLabel.setIcon(defaultIcon);
-			destCountryImageLabel.setIcon(defaultIcon);
-			capturedTerritory = false;
-			gameState = State.DRAFT;
+
+	public void takeTurn() {
+		currPlayer = players.get(turn % 2);
+		JOptionPane.showMessageDialog(null, "Get Ready " + currPlayer.getName(),
+				"RISK", JOptionPane.PLAIN_MESSAGE);
+		sourceCountryImageLabel.setIcon(defaultIcon);
+		destCountryImageLabel.setIcon(defaultIcon);
+		capturedTerritory = false;
+		gameState = State.DRAFT;
+
+		sourceCountry = null;
+		destCountry = null;
+
+		actionButton.setText("<Action>");
+		chooseSourceButton.setEnabled(false);
+		chooseDestButton.setEnabled(false);
+		actionButton.setEnabled(false);
+		endPhaseButton.setEnabled(true);
+		endPhaseButton.setText(END_DRAFT);
+
+		draft();
+
+		// Handle AI, Turn
+		if (currPlayer != players.get(0) && currPlayer == players.get(1)) {
+			// Draft
 			
-			chooseSourceButton.setEnabled(false);
-			chooseDestButton.setEnabled(false);
-			attackButton.setEnabled(false);
-			endPhaseButton.setEnabled(true);
-			endPhaseButton.setText(END_DRAFT);
+			// Attack
 			
-			draft();
+			// Fortify
 		}
+	}
 
 	/** Create players */
 	private void createPlayers() {
@@ -223,7 +245,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			players.get(i % players.size()).getHand().add(deck.draw());
 		}
 	}
-	
+
 	private void adjust() {
 		gameboard.setWeightsHard(players.get(1), players.get(0), players.get(2));
 		gameboard.printWeights();
@@ -247,22 +269,24 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			}
 		}
 	}
-	
+
 	private void initialArmyPlacement() {
 		if (gameState == State.DRAFT) {
 			for (int i = 1; i < players.size(); i++) {
-				adjust(); // Make sure the Neutral player knows where to place units in relation to AI
+				adjust(); // Make sure the Neutral player knows where to place units in
+									// relation to AI
 				Player p = players.get(i);
 				int ida = p.getDraftedArmies();
 				ArrayList<Country> l = p.getTerritories();
 				float tw = 0;
 				for (Country c : l) {
 					tw += c.getWeight();
-				}				
-				while(p.getDraftedArmies() > 0) {
+				}
+				while (p.getDraftedArmies() > 0) {
 					for (Country c : l) {
-						int draftable = (int)((c.getWeight()/tw) * ida);
-						draftable = (draftable > p.getDraftedArmies()) ? p.getDraftedArmies() : draftable;
+						int draftable = (int) ((c.getWeight() / tw) * ida);
+						draftable = (draftable > p.getDraftedArmies()) ? p
+								.getDraftedArmies() : draftable;
 						p.draftUnits(draftable, c);
 					}
 				}
@@ -270,17 +294,16 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			updateGUI();
 			chooseSourceButton.setEnabled(false);
 			chooseDestButton.setEnabled(false);
-			attackButton.setEnabled(false);
+			actionButton.setEnabled(false);
 			endPhaseButton.setText(END_DRAFT);
-			currPlayer = players.get(turn %2);
+			currPlayer = players.get(turn % 2);
 			while (players.get(0).getDraftedArmies() > 0)
-				try {	Thread.sleep(5000); } 
-				catch (InterruptedException e) { e.printStackTrace(); }
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 		}
-	}
-	
-	private void nextPlayer() {
-		turn++;
 	}
 
 	private void initGUI() {
@@ -320,7 +343,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		commandPanelTitle = new JLabel("Commands");
 		chooseSourceButton = new JButton("Choose Source");
 		chooseDestButton = new JButton("Choose Destination");
-		attackButton = new JButton("Attack");
+		actionButton = new JButton("<Action>");
 		endPhaseButton = new JButton(END_DRAFT);
 		cardListPanel = new JPanel(new GridBagLayout());
 		cardPanelLabel = new JLabel("Hand");
@@ -332,7 +355,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		mainPanel.addMouseListener(this);
 		chooseSourceButton.addActionListener(this);
 		chooseDestButton.addActionListener(this);
-		attackButton.addActionListener(this);
+		actionButton.addActionListener(this);
 		endPhaseButton.addActionListener(this);
 
 		Font titleFont = new Font("Arial", Font.BOLD, 14);
@@ -376,7 +399,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		addComponent(actionPanel, commandPanelTitle, 0, 0, 1, 1, CENTER);
 		addComponent(actionPanel, chooseSourceButton, 0, 1, 1, 1, CENTER);
 		addComponent(actionPanel, chooseDestButton, 0, 2, 1, 1, CENTER);
-		addComponent(actionPanel, attackButton, 0, 3, 1, 1, CENTER);
+		addComponent(actionPanel, actionButton, 0, 3, 1, 1, CENTER);
 		addComponent(actionPanel, endPhaseButton, 0, 4, 1, 1, CENTER);
 		commandPanel.add(cardListPanel, BorderLayout.EAST);
 		addComponent(cardListPanel, cardPanelLabel, 0, 0, 1, 1,
@@ -386,14 +409,14 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		mapPanel.addMouseListener(this);
 
 		mapWrapper.setBackground(new Color(0xbbccff));
-		//sourceCountryImageLabel.setPreferredSize(new Dimension(20, 20));
-		//destCountryImageLabel.setPreferredSize(new Dimension(20, 20));
-		
-	// Add players to the playerPanel and update
-			for (int i = 0; i < players.size(); i++) {
-				playerPanel[i].addPlayer(players.get(i));
-				playerPanel[i].updatePanel();
-			}
+		// sourceCountryImageLabel.setPreferredSize(new Dimension(20, 20));
+		// destCountryImageLabel.setPreferredSize(new Dimension(20, 20));
+
+		// Add players to the playerPanel and update
+		for (int i = 0; i < players.size(); i++) {
+			playerPanel[i].addPlayer(players.get(i));
+			playerPanel[i].updatePanel();
+		}
 	}
 
 	private void initMenu() {
@@ -415,12 +438,12 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		about.addActionListener(new AboutMenuListener());
 		this.setJMenuBar(menubar);
 	}
-	
+
 	private void updateGUI() {
 		for (PlayerPanel p : playerPanel)
 			p.updatePanel();
 		mapPanel.update();
-		this.repaint();		
+		this.repaint();
 	}
 
 	/** Adds a component to a panel using the GridBagConstraints layout manager. */
@@ -442,7 +465,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		BufferedImage img = null;
 		try {
 			URL url = this.getClass().getClassLoader().getResource(fileLocation);
-			//System.out.println(url.getPath());
+			// System.out.println(url.getPath());
 			img = ImageIO.read(url);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -490,14 +513,14 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		// JOptionPane.showMessageDialog(this, "Message", "Title",
 		// JOptionPane.INFORMATION_MESSAGE);
-		//players.get(0).setColor(PlayerColors.BLUE.color());
+		// players.get(0).setColor(PlayerColors.BLUE.color());
 		System.err.print("Changed");
-		
+
 		if (gameState == State.DRAFT) {
 			int p = mapPanel.getCurrPixel();
 			Country c = getSelectedCountry(p);
@@ -509,11 +532,11 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			}
 		}
 
-		if (gameState == State.ATTACK) {	
+		if (gameState == State.ATTACK || gameState == State.FORTIFY) {
 			int p = mapPanel.getCurrPixel();
 			Country c = getSelectedCountry(p);
 			if (c != null) {
-				if (lastButton != null) {	
+				if (lastButton != null) {
 					if (lastButton == chooseSourceButton) {
 						if (c.getPlayer() == currPlayer) {
 							sourceCountry = c;
@@ -529,8 +552,9 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						} catch (Exception ex) {
 							ex.printStackTrace();
 						}
-						if (neightbors.contains(c)) {	
-							if (c.getPlayer() != currPlayer) {
+						if (neightbors.contains(c)) {
+							if ((c.getPlayer() != currPlayer && gameState == State.ATTACK)
+									|| (c.getPlayer() == currPlayer && gameState == State.FORTIFY)) {
 								destCountry = c;
 								destCountryImageLabel.setIcon(c.getImage());
 								destCountryNameLabel.setText(c.getName());
@@ -539,13 +563,24 @@ public class App extends JFrame implements MouseListener, ActionListener {
 							}
 						} else {
 							String title = "Destination Choice Error";
-							String available = c.getName() + " is not an ajacent enemy country. \n\nAvailable countries to attack:";
-							for (Country n : neightbors) {
-								if (n.getPlayer() != currPlayer)
-								available += String.format("\n - %s (%s)", n.getName(), n.getPlayer().getName());
+							String message = "";
+							if (gameState == State.ATTACK) {
+								message = c.getName()
+										+ " is not an ajacent enemy country. \n\nAvailable countries to attack:";
+								for (Country n : neightbors) {
+									if (n.getPlayer() != currPlayer)
+										message += String.format("\n - %s (%s)", n.getName(), n
+												.getPlayer().getName());
+								}
+							} else if (gameState == State.FORTIFY) {
+								message = c.getName()
+										+ " is not an ajacent allied country. \n\nAvailable countries to fortify:";
+								for (Country n : neightbors) {
+									if (n.getPlayer() == currPlayer)
+										message += String.format("\n - %s", n.getName());
+								}
 							}
-							
-							JOptionPane.showMessageDialog(null, available, title,
+							JOptionPane.showMessageDialog(null, message, title,
 									JOptionPane.PLAIN_MESSAGE);
 						}
 					}
@@ -563,7 +598,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			}
 		}
 	}
-	
+
 	public void chooseCountryErr() {
 		popup("You cannot pick this country!", 0);
 	}
@@ -589,48 +624,134 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	public void popup(String msg, int val) {
 		JOptionPane.showMessageDialog(null, msg, TITLE, val);
 	}
 
+	public int transfer(int min) {
+		int bound = min == 0 ? -1 : -min;
+		Object[] vals = new Object[sourceCountry.getArmySize() + bound];
+		for (int i = 0; i < vals.length; i++)	vals[i] = Integer.toString(i + min);
+		String val = (String) JOptionPane.showInputDialog(this,
+				"Transfer Amount", "Fortify", JOptionPane.QUESTION_MESSAGE, null,
+				vals, "1");
+		return Integer.parseInt(val);
+	}
+	
+	public void fortify() {
+		int val = transfer(1);
+		if (val > 0) {
+			currPlayer.removeUnits(val, sourceCountry);
+			currPlayer.addUnits(val, destCountry);
+			chooseSourceButton.setEnabled(false);
+			chooseDestButton.setEnabled(false);
+			actionButton.setEnabled(false);
+			updateGUI();
+		}
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		lastButton = e.getSource();
 		// TODO Auto-generated method stub
-		if (e.getSource() == attackButton) {
-			System.out.println("Attack!");
-			if (currPlayer.getDraftedArmies() > 0) {
-				popup("Please draft all of your available armies before proceeding to attack.", 1);
-			} else {
-				gameState = State.ATTACK;
+		if (e.getSource() == actionButton) {
+			if (actionButton.getText().equalsIgnoreCase("Attack")) {
+				if (sourceCountry != null && destCountry != null) {
+					// ****************************************************//
+					// Number starting of units
+					int iua = sourceCountry.getArmySize(), attackerUnits = iua;
+					int iud = destCountry.getArmySize(), defenderUnits = iud;
+					float diffFact = 0.25f; // Afford to lose
+
+					int attackerDice = 0;
+					int defenderDice = 0;
+					while (attackerUnits > 1 && defenderUnits > 0	&& attackerUnits > (iua * diffFact)) {
+						attackerDice = attackerUnits > 3 ? 3 : attackerUnits > 2 ? 2 : 1;
+						defenderDice = defenderUnits > 1 ? 2 : 1;
+
+						byte result = Die.rollOff(attackerDice, defenderDice);
+						int numberOfAttackWins = result & 0xF;
+						int numberOfDefendWins = result >> 4;
+
+						// Decrement units
+						attackerUnits -= numberOfDefendWins;
+						defenderUnits -= numberOfAttackWins;
+						destCountry.getPlayer().removeUnits(numberOfAttackWins, destCountry);
+						sourceCountry.getPlayer().removeUnits(numberOfDefendWins, sourceCountry);
+					}
+					updateGUI();
+					String msg = "";
+					if  (attackerUnits > 1 && defenderUnits == 0) {
+						capturedTerritory = true;
+						int val = transfer(attackerDice);
+						String loser = destCountry.getPlayer().getName();
+						sourceCountry.getPlayer().winBattle(sourceCountry, destCountry, val);
+						updateGUI();
+						msg = String.format("%s gained control of %s (%s).", sourceCountry.getPlayer().getName(), destCountry.getName(), loser);
+					} else if (attackerUnits > (iua * diffFact)) {
+						msg = String.format("%s gave up the battle.", sourceCountry.getPlayer().getName());
+					}	else {
+						msg = String.format("%s lost the battle.", sourceCountry.getPlayer().getName());
+					}
+					popup(msg, 1);
+					// ****************************************************//
+				} else {
+					popup("Please choose a source and destination", 0);
+				}
+			} else if (actionButton.getText().equalsIgnoreCase("Fortify")) {
+
+				if (sourceCountry != null && destCountry != null) {
+					fortify();
+				} else {
+					popup("You have not selected your countries!", 0);
+				}
 			}
 		}
 
-		if (e.getSource() == chooseSourceButton || e.getSource() == chooseDestButton) {
-			
+		if (e.getSource() == chooseSourceButton
+				|| e.getSource() == chooseDestButton) {
+			// Check this out, yo.
 		}
-		
-		if (e.getSource() == endPhaseButton && endPhaseButton.getText().equalsIgnoreCase(END_DRAFT)) {
-			gameState = State.ATTACK;
-			endPhaseButton.setText(END_ATTACK);
-			attackButton.setEnabled(true);
-			chooseSourceButton.setEnabled(true);
-			chooseDestButton.setEnabled(true);
-		}
-		
-		if (e.getSource() == endPhaseButton && endPhaseButton.getText().equalsIgnoreCase(END_TURN)) {
-			int messageType = JOptionPane.WARNING_MESSAGE;
-      String[] options = {"Yes", "No"};
-			int response = JOptionPane.showOptionDialog(this, "Are you sure?", "Warning: Ending Turn?!", 0, messageType, null, options, "No");
-			
-			if (response == 0) {
-				// Set up next player
-				nextPlayer();
-				takeTurn();
-			} else {
-				popup("Aborted Action!", 1);
+
+		if (e.getSource() == endPhaseButton) {
+			if (endPhaseButton.getText().equalsIgnoreCase(END_DRAFT)) {
+				if (currPlayer.getDraftedArmies() > 0) {
+					popup(
+							"Please draft all of your available armies before proceeding to attack.",
+							1);
+				} else {
+					gameState = State.ATTACK;
+					endPhaseButton.setText(END_ATTACK);
+					actionButton.setText("Attack");
+					actionButton.setEnabled(true);
+					chooseSourceButton.setEnabled(true);
+					chooseDestButton.setEnabled(true);
+					sourceCountry = null;
+					destCountry = null;
+				}
+			} else if (endPhaseButton.getText().equalsIgnoreCase(END_ATTACK)) {
+				gameState = State.FORTIFY;
+				endPhaseButton.setText(END_TURN);
+				actionButton.setText("Fortify");
+				sourceCountry = null;
+				destCountry = null;
+				sourceCountryImageLabel.setIcon(defaultIcon);
+				destCountryImageLabel.setIcon(defaultIcon);
+			} else if (endPhaseButton.getText().equalsIgnoreCase(END_TURN)) {
+				int messageType = JOptionPane.WARNING_MESSAGE;
+				String[] options = { "Yes", "No" };
+				int response = JOptionPane.showOptionDialog(this, "Are you sure?",
+						"Warning: Ending Turn?!", 0, messageType, null, options, "No");
+				if (response == 0) {
+					// Set up next player
+					turn++;
+					takeTurn();
+				} else {
+					popup("Aborted Action!", 1);
+				}
 			}
 		}
+		updateGUI();
 	}
 }

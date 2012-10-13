@@ -52,9 +52,9 @@ public class PlayerPanel extends JPanel {
 		mainPanel.add(infoPanel, BorderLayout.CENTER);
 		
 		titlePanel.setLayout(new GridLayout(0, 1));
-		titlePanel.add(playerName);
-		titlePanel.add(armySizeLabel);
-		titlePanel.add(draftedUnits);
+		titlePanel.add(playerName).setForeground(new Color(0xFFFF00));
+		titlePanel.add(armySizeLabel).setForeground(new Color(0xFFFF00));
+		titlePanel.add(draftedUnits).setForeground(new Color(0xFFFF00));
 				
 		scrollPane = new JScrollPane(territoriesList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);	
 		infoPanel.setLayout(new BorderLayout());

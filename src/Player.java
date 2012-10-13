@@ -117,13 +117,13 @@ public class Player implements PlayerActions {
 		}
 	}
 	
-	public void loseBattle(Country country, Player enemy, int enemyUnits) {
-		int yourUnits = country.getArmySize();
-		this.removeUnits(yourUnits, country); // Remove your remaining units *could be 1 or 2
-		this.getTerritories().remove(country); // Remove country from your territories list
-		enemy.getTerritories().add(country); // Add the country to the Enemy's list of territories
-		enemy.addUnits(enemyUnits, country); // Remember: Enemy player adds number of units greater than or equal to their final dice roll wins
-		country.setPlayer(enemy); // Give the Enemy control of the territory 
+	public void winBattle(Country source, Country dest, int units) {
+		dest.getPlayer().removeUnits(dest.getArmySize(), dest); // Remove your remaining units *could be 1 or 2
+		dest.getPlayer().getTerritories().remove(dest); // Remove country from your territories list
+		source.getPlayer().getTerritories().add(dest); // Add the country to the Enemy's list of territories
+		source.getPlayer().addUnits(units, dest); // Remember: Enemy player adds number of units greater than or equal to their final dice roll wins
+		source.getPlayer().removeUnits(units, source); // Remove units from source equal to the number fortified
+		dest.setPlayer(source.getPlayer()); // Give the Enemy control of the territory
 	}
 
 	@Override

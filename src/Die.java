@@ -45,17 +45,18 @@ public class Die {
 	}
 
 	public static void main(String[] args) {
-
+		
 		// Number starting of units
-		int attackerUnits = 20;
-		int defenderUnits = 30;
+		int iua = 72, attackerUnits = iua;
+		int iud = 1, defenderUnits = iud;
+		float diffFact = 0.25f; // Afford to lose
 
-		// Store wins
-		int attack = 0, defend = 0;
+		int attackWins = 0, defendWins = 0; // Store wins
+		
+		System.out.println(((float)iua*diffFact));
 
-		while (attackerUnits > 1 && defenderUnits > 0) {
-
-			int attackerDice = attackerUnits > 3 ? 3 : 2;
+		while (attackerUnits > 1 && defenderUnits > 0 && attackerUnits > (iua*diffFact)) {
+			int attackerDice = attackerUnits > 3 ? 3 : attackerUnits > 2 ? 2 : 1;
 			int defenderDice = defenderUnits > 1 ? 2 : 1;
 
 			byte result = Die.rollOff(attackerDice, defenderDice);
@@ -67,13 +68,13 @@ public class Die {
 			attackerUnits -= numberOfDefendWins;
 			
 			// Track wins
-			attack += numberOfAttackWins;
-			defend += numberOfDefendWins;
+			attackWins += numberOfAttackWins;
+			defendWins += numberOfDefendWins;
 		}
 		
-		System.out.println("\n" + (attackerUnits > 1 ? "Attacker Wins" : "Standoff"));
+		System.out.println("\n" + (attackerUnits > 1 && defenderUnits == 0 ? "Attacker Wins" : "Draw"));
 		
-		System.out.printf("\nWins\nAttacker:%d\nDefender:%d\n\n", attack, defend);
+		System.out.printf("\nKills\nAttacker:%d\nDefender:%d\n\n", attackWins, defendWins);
 		System.out.println("Histogram:");
 		for (int h : histogram) {
 			for (int i = 0; i < h; i++) {
