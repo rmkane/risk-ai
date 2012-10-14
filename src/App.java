@@ -87,8 +87,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private JLabel cardPanelLabel;
 	private JList<String> cardList;
 	private JScrollPane cardListScroll;
-	private ImageIcon defaultIcon = new ImageIcon(
-			readImage("resources/default.png"));
+	private final ImageIcon DEFAULT_ICON = new ImageIcon(readImage("resources/default.png"));
 
 	private Country sourceCountry;
 	private Country destCountry;
@@ -183,6 +182,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 					check[c.getUnitType().id()]++;
 				int count = 0;
 				for (int i = 0; i < check.length - 1; i++) {
+					// If you have 3 of the same type of card
 					if (check[i] > 2) {
 						cashed = true;
 						match_bonus = cashIn(i);
@@ -190,10 +190,11 @@ public class App extends JFrame implements MouseListener, ActionListener {
 					} else if (check[i] > 0)
 						count++;
 				}
+				// If you have 3 different type cards
 				if (count > 2) {
 					cashed = true;
 					for (int k = 0; k < check.length - 1; k++) {
-						if (k > 0)
+						if (check[k] > 0)
 							match_bonus = cashIn(k);
 					}
 				}
@@ -219,14 +220,11 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		currPlayer = players.get(turn % 2);
 		JOptionPane.showMessageDialog(null, "Get Ready " + currPlayer.getName(),
 				"RISK", JOptionPane.PLAIN_MESSAGE);
-		sourceCountryImageLabel.setIcon(defaultIcon);
-		destCountryImageLabel.setIcon(defaultIcon);
+		sourceCountryImageLabel.setIcon(DEFAULT_ICON);
+		destCountryImageLabel.setIcon(DEFAULT_ICON);
 		capturedTerritory = false;
 		gameState = State.DRAFT;
-
-		sourceCountry = null;
-		destCountry = null;
-
+		clearSelection();
 		actionButton.setText("<Action>");
 		chooseSourceButton.setEnabled(false);
 		chooseDestButton.setEnabled(false);
@@ -378,10 +376,10 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		commandPanel = new JPanel(new BorderLayout());
 		selectPanelTitle = new JLabel("Selected Territories");
 		sourceCountryTitleLabel = new JLabel("Source");
-		sourceCountryImageLabel = new JLabel(defaultIcon);
+		sourceCountryImageLabel = new JLabel(DEFAULT_ICON);
 		sourceCountryNameLabel = new JLabel("<SOURCE>");
 		destCountryTitleLabel = new JLabel("Desination");
-		destCountryImageLabel = new JLabel(defaultIcon);
+		destCountryImageLabel = new JLabel(DEFAULT_ICON);
 		destCountryNameLabel = new JLabel("<DESTINATION>");
 		commandPanelTitle = new JLabel("Commands");
 		chooseSourceButton = new JButton("Choose Source");
@@ -498,6 +496,15 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		}
 	}
 
+	private void clearSelection() {
+		sourceCountry = null;
+		destCountry = null;
+		sourceCountryNameLabel.setText("<SOURCE>");
+		destCountryNameLabel.setText("<DESTINATION>");
+		sourceCountryImageLabel.setIcon(DEFAULT_ICON);
+		destCountryImageLabel.setIcon(DEFAULT_ICON);
+	}
+
 	/** Adds a component to a panel using the GridBagConstraints layout manager. */
 	private void addComponent(JPanel panel, JComponent component, int xPos,
 			int yPos, int width, int height, int align) {
@@ -566,11 +573,19 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		return null;
 	}
 
-	public void popup(String msg, int val) {
+	private void popup(String msg, int val) {
 		JOptionPane.showMessageDialog(null, msg, TITLE, val);
 	}
 
-	public int transfer(int min) {
+	private int confirmation() {
+		int messageType = JOptionPane.WARNING_MESSAGE;
+		String[] options = { "Yes", "No" };
+		int response = JOptionPane.showOptionDialog(this, "Are you sure?",
+				endPhaseButton.getText() + "?!", 0, messageType, null, options, "No");
+		return response;
+	}
+
+	private int transfer(int min) {
 		int bound = min == 0 ? -1 : -min;
 		Object[] vals = new Object[sourceCountry.getArmySize() + bound];
 		for (int i = 0; i < vals.length; i++)
@@ -759,10 +774,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				} else {
 					popup("Please choose a source and destination", 0);
 				}
-				sourceCountry = null;
-				destCountry = null;
-				sourceCountryImageLabel.setIcon(defaultIcon);
-				destCountryImageLabel.setIcon(defaultIcon);
+				clearSelection();
 			} else if (actionButton.getText().equalsIgnoreCase("Fortify")) {
 
 				if (sourceCountry != null && destCountry != null) {
@@ -791,22 +803,20 @@ public class App extends JFrame implements MouseListener, ActionListener {
 					actionButton.setEnabled(true);
 					chooseSourceButton.setEnabled(true);
 					chooseDestButton.setEnabled(true);
-					sourceCountry = null;
-					destCountry = null;
+					clearSelection();
 				}
 			} else if (endPhaseButton.getText().equalsIgnoreCase(END_ATTACK)) {
-				gameState = State.FORTIFY;
-				endPhaseButton.setText(END_TURN);
-				actionButton.setText("Fortify");
-				sourceCountry = null;
-				destCountry = null;
-				sourceCountryImageLabel.setIcon(defaultIcon);
-				destCountryImageLabel.setIcon(defaultIcon);
+				int response = confirmation();
+				if (response == 0) {
+					gameState = State.FORTIFY;
+					endPhaseButton.setText(END_TURN);
+					actionButton.setText("Fortify");
+					clearSelection();
+				} else {
+					popup("Aborted Action!", 1);
+				}
 			} else if (endPhaseButton.getText().equalsIgnoreCase(END_TURN)) {
-				int messageType = JOptionPane.WARNING_MESSAGE;
-				String[] options = { "Yes", "No" };
-				int response = JOptionPane.showOptionDialog(this, "Are you sure?",
-						"Warning: Ending Turn?!", 0, messageType, null, options, "No");
+				int response = confirmation();
 				if (response == 0) {
 					// Set up next player
 					if (capturedTerritory) {
