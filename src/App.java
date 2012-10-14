@@ -46,10 +46,10 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private final String END_DRAFT = "End Draft Phase";
 	private final String END_ATTACK = "End Attack Phase";
 	private final String END_TURN = "End Turn";
-	
+
 	// Keep Track of Cash In values
 	private int cashInIndex;
-	private final int[] cashInValues = {4, 6, 8, 10, 12, 15};
+	private final int[] cashInValues = { 4, 6, 8, 10, 12, 15 };
 	private int cashInVal;
 
 	// Menu
@@ -87,7 +87,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private JLabel cardPanelLabel;
 	private JList<String> cardList;
 	private JScrollPane cardListScroll;
-	private ImageIcon defaultIcon = new ImageIcon(readImage("resources/default.png"));
+	private ImageIcon defaultIcon = new ImageIcon(
+			readImage("resources/default.png"));
 
 	private Country sourceCountry;
 	private Country destCountry;
@@ -127,24 +128,49 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		System.out.println("SIZE: " + gameboard.getWorld().size());
 	}
 
+	private int cashIn(int index) {
+		int matchBonus = 0;
+		int initHandSize = currPlayer.getHand().size() - 1;
+		for (int j = initHandSize; j >= 0; j--) {
+			Card card = currPlayer.getHand().get(j);
+			if (card.getUnitType().id() == index) {
+				for (Country t : currPlayer.getTerritories()) {
+					if (t.getName().equalsIgnoreCase(card.getCountryName())) {
+						if (matchBonus == 0) {
+							matchBonus = 2;
+							System.out.println("Matched");
+						}
+					}
+				}
+				deck.addToDiscard(card);
+				currPlayer.getHand().remove(j);
+				System.out.println("[Same] Removed Card: " + card.getCountryName());
+			}
+		}
+		return matchBonus;
+	}
+
 	private void draft() {
 		if (gameState == State.DRAFT) {
 			/** Territory Bonus */
-			int territoryBonus = (int) Math.floor(currPlayer.getTerritories().size() / 3);
+			int territoryBonus = (int) Math
+					.floor(currPlayer.getTerritories().size() / 3);
 			/** Continent Bonus */
 			int continentBonus = 0;
 			Iterator<Continent> ic = gameboard.getWorld().iterator();
 			while (ic.hasNext()) {
 				boolean contains = true;
-				Continent continent = (Continent)ic.next();
+				Continent continent = (Continent) ic.next();
 				Iterator<Country> it = continent.getCountries().iterator();
 				while (it.hasNext() && contains) {
 					Country country = it.next();
 					if (!(currPlayer.getTerritories().contains(country)))
 						contains = false;
-					else contains = true;
+					else
+						contains = true;
 				}
-				if (contains) continentBonus += continent.getBonusArmies();
+				if (contains)
+					continentBonus += continent.getBonusArmies();
 			}
 			/** Cash-in Bonus */
 			int cash_inBonus = 0;
@@ -156,57 +182,32 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				for (Card c : cards)
 					check[c.getUnitType().id()]++;
 				int count = 0;
-				for (int i = 0; i < check.length-1; i++) {
+				for (int i = 0; i < check.length - 1; i++) {
 					if (check[i] > 2) {
 						cashed = true;
-						int initHandSize = currPlayer.getHand().size() - 1;
-						for (int j = initHandSize; j >= 0; j--) {
-							Card cc = currPlayer.getHand().get(j);
-							if (cc.getUnitType().id() == i) {
-								if (currPlayer.getTerritories().contains(cc)) {
-									if (match_bonus == 0) {
-										match_bonus = 2;
-										System.out.println("Matched");
-									}
-								}
-								deck.addToDiscard(cc);
-								currPlayer.getHand().remove(j);
-								System.out.println("[Same] Removed Card: " + cc.getCountryName());
-							}
-						}
+						match_bonus = cashIn(i);
 						break;
-					} else if (i > 0)
+					} else if (check[i] > 0)
 						count++;
 				}
 				if (count > 2) {
 					cashed = true;
-					for (int k = 0; k < check.length-1; k++) {
-						if (k > 0) {
-							int initHandSize = currPlayer.getHand().size() - 1;
-							for (int i = initHandSize; i >= 0; i--) {
-								Card cc = currPlayer.getHand().get(i);
-								if (cc.getUnitType().id() == k) {
-									if (currPlayer.getTerritories().contains(cc)) {
-										if (match_bonus == 0)
-											match_bonus = 2;
-									}
-									deck.addToDiscard(cc);
-									currPlayer.getHand().remove(k);
-									System.out.println("[Multi] Removed Card: " + cc.getCountryName());
-								}
-							}
-						}
+					for (int k = 0; k < check.length - 1; k++) {
+						if (k > 0)
+							match_bonus = cashIn(k);
 					}
 				}
 				if (cashed) {
 					cash_inBonus = cashInVal;
 					// Increment cash in value
 					cashInIndex++;
-					cashInVal = (cashInIndex > cashInValues.length-1) ? cashInVal + 5 : cashInValues[cashInIndex];
+					cashInVal = (cashInIndex > cashInValues.length - 1) ? cashInVal + 5
+							: cashInValues[cashInIndex];
 				}
 			}
-			
-			System.out.printf("T: %d, C: %d, $: %d, M: %d", territoryBonus, continentBonus, cash_inBonus, match_bonus);
+
+			popup(String.format("T: %d, C: %d, $: %d, M: %d", territoryBonus,
+					continentBonus, cash_inBonus, match_bonus), 1);
 			currPlayer.setDraftedArmies(currPlayer.getDraftedArmies()
 					+ territoryBonus + continentBonus + cash_inBonus + match_bonus);
 			updateGUI();
@@ -243,6 +244,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			for (Country country : currPlayer.getTerritories()) {
 				if (risky == null) {
 					risky = country;
+					s += country.getName() + "\n";
 				}
 				if (country.getWeight() > risky.getWeight()) {
 					risky = country;
@@ -253,7 +255,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			currPlayer.draftUnits(currPlayer.getDraftedArmies(), risky);
 			updateGUI();
 			// Attack
-			
+
 			// Fortify
 		}
 	}
@@ -262,7 +264,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private void createPlayers() {
 		// Create Players
 		this.players = new ArrayList<Player>();
-		players.add(new Player("Human", PlayerColors.BLUE, 30)); // Change back to 80
+		players.add(new Player("Human", PlayerColors.BLUE, 30)); // Change back to
+																															// 80
 		players.add(new PlayerAI("Computer", PlayerColors.RED, 80));
 		players.add(new Player("Neutral", PlayerColors.GRAY, 40));
 	}
@@ -297,7 +300,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				}
 			}
 		}
-		
+
 		for (Player p : players) {
 			while (p.getHand().size() > 0) {
 				deck.addToDiscard(p.getHand().get(0));
@@ -332,6 +335,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			chooseSourceButton.setEnabled(false);
 			chooseDestButton.setEnabled(false);
 			actionButton.setEnabled(false);
+			endPhaseButton.setEnabled(false);
 			endPhaseButton.setText(END_DRAFT);
 			currPlayer = players.get(turn % 2);
 			updateGUI();
@@ -386,7 +390,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		endPhaseButton = new JButton(END_DRAFT);
 		cardListPanel = new JPanel(new GridBagLayout());
 		cardPanelLabel = new JLabel("Hand");
-		cardList = new JList<String>(new String[] { "<Empty>"});
+		cardList = new JList<String>(new String[] { "<Empty>" });
 		cardListScroll = new JScrollPane(cardList);
 
 		// Add Listeners
@@ -482,12 +486,14 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			p.updatePanel();
 		mapPanel.update();
 		this.repaint();
-		
+
 		if (!(currPlayer.getHand().isEmpty())) {
 			cardList.ensureIndexIsVisible(cardList.getSelectedIndex());
 			String[] cardsByName = new String[currPlayer.getHand().size()];
 			int i = 0;
-			for (Card c : currPlayer.getHand()) cardsByName[i++] = (String.format("[%s] (%s)", c.getCountryName(), c.getUnitType().getName()));
+			for (Card c : currPlayer.getHand())
+				cardsByName[i++] = (String.format("[%s] (%s)", c.getCountryName(), c
+						.getUnitType().getName()));
 			cardList.setListData(cardsByName);
 		}
 	}
@@ -559,7 +565,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		}
 		return null;
 	}
-	
+
 	public void popup(String msg, int val) {
 		JOptionPane.showMessageDialog(null, msg, TITLE, val);
 	}
@@ -567,13 +573,13 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	public int transfer(int min) {
 		int bound = min == 0 ? -1 : -min;
 		Object[] vals = new Object[sourceCountry.getArmySize() + bound];
-		for (int i = 0; i < vals.length; i++)	vals[i] = Integer.toString(i + min);
-		String val = (String) JOptionPane.showInputDialog(this,
-				"Transfer Amount", "Fortify", JOptionPane.QUESTION_MESSAGE, null,
-				vals, "1");
+		for (int i = 0; i < vals.length; i++)
+			vals[i] = Integer.toString(i + min);
+		String val = (String) JOptionPane.showInputDialog(this, "Transfer Amount",
+				"Fortify", JOptionPane.QUESTION_MESSAGE, null, vals, "1");
 		return Integer.parseInt(val);
 	}
-	
+
 	public void fortify() {
 		int val = transfer(1);
 		if (val > 0) {
@@ -696,7 +702,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		lastButton = e.getSource();
@@ -712,7 +718,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 
 					int attackerDice = 0;
 					int defenderDice = 0;
-					while (attackerUnits > 1 && defenderUnits > 0	&& attackerUnits > (iua * diffFact)) {
+					while (attackerUnits > 1 && defenderUnits > 0
+							&& attackerUnits > (iua * diffFact)) {
 						attackerDice = attackerUnits > 3 ? 3 : attackerUnits > 2 ? 2 : 1;
 						defenderDice = defenderUnits > 1 ? 2 : 1;
 
@@ -723,23 +730,29 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						// Decrement units
 						attackerUnits -= numberOfDefendWins;
 						defenderUnits -= numberOfAttackWins;
-						destCountry.getPlayer().removeUnits(numberOfAttackWins, destCountry);
-						sourceCountry.getPlayer().removeUnits(numberOfDefendWins, sourceCountry);
+						destCountry.getPlayer()
+								.removeUnits(numberOfAttackWins, destCountry);
+						sourceCountry.getPlayer().removeUnits(numberOfDefendWins,
+								sourceCountry);
 					}
 					updateGUI();
 					String msg = "";
-					if  (attackerUnits > 1 && defenderUnits == 0) {
+					if (attackerUnits > 1 && defenderUnits == 0) {
 						capturedTerritory = true;
 						int val = transfer(attackerDice);
 						String loser = destCountry.getPlayer().getName();
-						sourceCountry.getPlayer().winBattle(sourceCountry, destCountry, val);
+						sourceCountry.getPlayer()
+								.winBattle(sourceCountry, destCountry, val);
 						capturedTerritory = true;
 						updateGUI();
-						msg = String.format("%s gained control of %s (%s).", sourceCountry.getPlayer().getName(), destCountry.getName(), loser);
+						msg = String.format("%s gained control of %s (%s).", sourceCountry
+								.getPlayer().getName(), destCountry.getName(), loser);
 					} else if (attackerUnits > (iua * diffFact)) {
-						msg = String.format("%s gave up the battle.", sourceCountry.getPlayer().getName());
-					}	else {
-						msg = String.format("%s lost the battle.", sourceCountry.getPlayer().getName());
+						msg = String.format("%s gave up the battle.", sourceCountry
+								.getPlayer().getName());
+					} else {
+						msg = String.format("%s lost the battle.", sourceCountry
+								.getPlayer().getName());
 					}
 					popup(msg, 1);
 					// ****************************************************//
@@ -801,7 +814,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						// Give the player a card...
 						Card draw = deck.draw();
 						currPlayer.getHand().add(draw);
-						popup(String.format("Card: %s - %s", draw.getCountryName(), draw.getUnitType().getName()), 1);
+						popup(String.format("Card: %s - %s", draw.getCountryName(), draw
+								.getUnitType().getName()), 1);
 					}
 					updateGUI();
 					capturedTerritory = false;
