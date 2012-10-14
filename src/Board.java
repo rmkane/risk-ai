@@ -284,6 +284,7 @@ public class Board {
 			territories.addEdge(CHINA, SIAM);
 			territories.addEdge(CHINA, SIBERIA);
 			territories.addEdge(CHINA, URAL);
+			territories.addEdge(INDIA, MIDDLE_EAST);
 			territories.addEdge(INDIA, SIAM);
 			territories.addEdge(IRKUTSK, KAMCHATKA);
 			territories.addEdge(IRKUTSK, MONGOLIA);

@@ -74,9 +74,8 @@ public class Deck {
 		discard.add(card);
 	}
 
-	// Call at the end of every turn
 	/** Move the discard to the deck if cards run out */
-	public void transfer() {
+	public void emptyDeck() {
 		if (deckSize() < 1 && discardSize() > 0) {
 			for(int i = 0; i < discardSize(); i++) {
 				deck.add(discard.get(i));

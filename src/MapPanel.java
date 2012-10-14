@@ -28,7 +28,7 @@ public class MapPanel extends JPanel implements MouseListener, Observer {
 	private int currPixel;
 
 	public MapPanel(Board board) {
-		this.board = new Board();
+		this.board = board;
 		this.addMouseListener(this);
 		setPreferredSize(new Dimension(WIDTH, HEIGHT));
 		currPixel = 0;
