@@ -87,7 +87,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private JLabel cardPanelLabel;
 	private JList<String> cardList;
 	private JScrollPane cardListScroll;
-	private final ImageIcon DEFAULT_ICON = new ImageIcon(readImage("resources/default.png"));
+	private final ImageIcon DEFAULT_ICON = new ImageIcon(
+			readImage("resources/default.png"));
 
 	private Country sourceCountry;
 	private Country destCountry;
@@ -124,29 +125,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		initGUI();
 		initialArmyPlacement();
 		takeTurn();
-		System.out.println("SIZE: " + gameboard.getWorld().size());
-	}
-
-	private int cashIn(int index) {
-		int matchBonus = 0;
-		int initHandSize = currPlayer.getHand().size() - 1;
-		for (int j = initHandSize; j >= 0; j--) {
-			Card card = currPlayer.getHand().get(j);
-			if (card.getUnitType().id() == index) {
-				for (Country t : currPlayer.getTerritories()) {
-					if (t.getName().equalsIgnoreCase(card.getCountryName())) {
-						if (matchBonus == 0) {
-							matchBonus = 2;
-							System.out.println("Matched");
-						}
-					}
-				}
-				deck.addToDiscard(card);
-				currPlayer.getHand().remove(j);
-				System.out.println("[Same] Removed Card: " + card.getCountryName());
-			}
-		}
-		return matchBonus;
 	}
 
 	private void draft() {
@@ -165,8 +143,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 					Country country = it.next();
 					if (!(currPlayer.getTerritories().contains(country)))
 						contains = false;
-					else
-						contains = true;
 				}
 				if (contains)
 					continentBonus += continent.getBonusArmies();
@@ -206,16 +182,17 @@ public class App extends JFrame implements MouseListener, ActionListener {
 							: cashInValues[cashInIndex];
 				}
 			}
-
-			popup(String.format("T: %d, C: %d, $: %d, M: %d", territoryBonus,
-					continentBonus, cash_inBonus, match_bonus), 1);
+			popup(String.format("Units Awarded: T: %d, C: %d, $: %d, M: %d",
+					territoryBonus, continentBonus, cash_inBonus, match_bonus), 1);
+			int bonusTotal = territoryBonus + continentBonus + cash_inBonus
+					+ match_bonus;
 			currPlayer.setDraftedArmies(currPlayer.getDraftedArmies()
-					+ territoryBonus + continentBonus + cash_inBonus + match_bonus);
-			updateGUI();
+					+ Math.max(3, bonusTotal));
 		}
+		updateGUI();
 	}
 
-	public void takeTurn() {
+	private void takeTurn() {
 		adjust();
 		currPlayer = players.get(turn % 2);
 		JOptionPane.showMessageDialog(null, "Get Ready " + currPlayer.getName(),
@@ -276,11 +253,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		}
 	}
 
-	private void adjust() {
-		gameboard.setWeightsHard(players.get(1), players.get(0), players.get(2));
-		gameboard.printWeights();
-	}
-
 	/** Based on the cards that players have, assign them territories */
 	private void assignTerritories() {
 		for (Player player : players) {
@@ -298,7 +270,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				}
 			}
 		}
-
+	
 		for (Player p : players) {
 			while (p.getHand().size() > 0) {
 				deck.addToDiscard(p.getHand().get(0));
@@ -307,6 +279,11 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		}
 		System.out.println("Done");
 		deck.emptyDeck();
+	}
+
+	private void adjust() {
+		gameboard.setWeightsHard(players.get(1), players.get(0), players.get(2));
+		gameboard.printWeights();
 	}
 
 	private void initialArmyPlacement() {
@@ -369,7 +346,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		playerPanel[2] = new PlayerPanel();
 		mapWrapper = new JPanel(new GridBagLayout());
 		mapPanel = new MapPanel(gameboard);
-		System.out.println("SIZE: " + gameboard.getWorld().size());
 		viewPanel = new JPanel(new BorderLayout());
 		actionPanel = new JPanel(new GridBagLayout());
 		selectPanel = new JPanel(new GridBagLayout());
@@ -505,6 +481,79 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		destCountryImageLabel.setIcon(DEFAULT_ICON);
 	}
 
+	private Country getSelectedCountry(int pixel) {
+		if (pixel != 0) {
+			Iterator<Country> it = gameboard.getTerritories().iterator();
+			while (it.hasNext()) {
+				Country country = (Country) it.next();
+				if (country.getColorVal() == pixel) {
+					return country;
+				}
+			}
+		}
+		return null;
+	}
+
+	private int cashIn(int index) {
+		int matchBonus = 0;
+		int initHandSize = currPlayer.getHand().size() - 1;
+		for (int j = initHandSize; j >= 0; j--) {
+			Card card = currPlayer.getHand().get(j);
+			if (card.getUnitType().id() == index) {
+				for (Country t : currPlayer.getTerritories()) {
+					if (t.getName().equalsIgnoreCase(card.getCountryName())) {
+						if (matchBonus == 0) {
+							matchBonus = 2;
+						}
+					}
+				}
+				deck.addToDiscard(card);
+				currPlayer.getHand().remove(j);
+				System.out.println("[Same] Removed Card: " + card.getCountryName());
+			}
+		}
+		
+		return matchBonus;
+	}
+
+	private void fortify() {
+		int val = transfer(1);
+		if (val > 0) {
+			currPlayer.removeUnits(val, sourceCountry);
+			currPlayer.addUnits(val, destCountry);
+			chooseSourceButton.setEnabled(false);
+			chooseDestButton.setEnabled(false);
+			actionButton.setEnabled(false);
+			updateGUI();
+		}
+	}
+
+	private void popup(String msg, int val) {
+		JOptionPane.showMessageDialog(null, msg, TITLE, val);
+	}
+
+	private int confirmation() {
+		int messageType = JOptionPane.WARNING_MESSAGE;
+		String[] options = { "Yes", "No" };
+		int response = JOptionPane.showOptionDialog(this, "Are you sure?",
+				endPhaseButton.getText() + "?!", 0, messageType, null, options, "No");
+		return response;
+	}
+
+	private int transfer(int min) {
+		int bound = min == 0 ? -1 : -min;
+		Object[] vals = new Object[sourceCountry.getArmySize() + bound];
+		for (int i = 0; i < vals.length; i++)
+			vals[i] = Integer.toString(i + min);
+		String val = (String) JOptionPane.showInputDialog(this, "Transfer Amount",
+				"Fortify", JOptionPane.QUESTION_MESSAGE, null, vals, "1");
+		return Integer.parseInt(val);
+	}
+
+	private void trace(Object obj) {
+		System.err.println(obj);
+	}
+
 	/** Adds a component to a panel using the GridBagConstraints layout manager. */
 	private void addComponent(JPanel panel, JComponent component, int xPos,
 			int yPos, int width, int height, int align) {
@@ -519,12 +568,11 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		panel.add(component, grid); // Adds component to the grid to the panel.
 	}
 
-	public BufferedImage readImage(String fileLocation) {
+	private BufferedImage readImage(String fileLocation) {
 		System.out.println("LOADING: " + fileLocation);
 		BufferedImage img = null;
 		try {
 			URL url = this.getClass().getClassLoader().getResource(fileLocation);
-			// System.out.println(url.getPath());
 			img = ImageIO.read(url);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -554,57 +602,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 
 	public static void main(String[] args) {
 		new App();
-	}
-
-	public void trace(Object obj) {
-		System.err.println(obj);
-	}
-
-	public Country getSelectedCountry(int pixel) {
-		if (pixel != 0) {
-			Iterator<Country> it = gameboard.getTerritories().iterator();
-			while (it.hasNext()) {
-				Country country = (Country) it.next();
-				if (country.getColorVal() == pixel) {
-					return country;
-				}
-			}
-		}
-		return null;
-	}
-
-	private void popup(String msg, int val) {
-		JOptionPane.showMessageDialog(null, msg, TITLE, val);
-	}
-
-	private int confirmation() {
-		int messageType = JOptionPane.WARNING_MESSAGE;
-		String[] options = { "Yes", "No" };
-		int response = JOptionPane.showOptionDialog(this, "Are you sure?",
-				endPhaseButton.getText() + "?!", 0, messageType, null, options, "No");
-		return response;
-	}
-
-	private int transfer(int min) {
-		int bound = min == 0 ? -1 : -min;
-		Object[] vals = new Object[sourceCountry.getArmySize() + bound];
-		for (int i = 0; i < vals.length; i++)
-			vals[i] = Integer.toString(i + min);
-		String val = (String) JOptionPane.showInputDialog(this, "Transfer Amount",
-				"Fortify", JOptionPane.QUESTION_MESSAGE, null, vals, "1");
-		return Integer.parseInt(val);
-	}
-
-	public void fortify() {
-		int val = transfer(1);
-		if (val > 0) {
-			currPlayer.removeUnits(val, sourceCountry);
-			currPlayer.addUnits(val, destCountry);
-			chooseSourceButton.setEnabled(false);
-			chooseDestButton.setEnabled(false);
-			actionButton.setEnabled(false);
-			updateGUI();
-		}
 	}
 
 	@Override
