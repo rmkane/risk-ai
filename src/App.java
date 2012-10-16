@@ -236,21 +236,31 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				actionButton.setText("<Action>");
 				endPhaseButton.setText("<Phase>");
 				// Draft
-				Country risky = null;
-				for (Country country : currPlayer.getTerritories()) {
-					risky = risky == null || country.getWeight() > risky.getWeight() ? country
-							: risky;
-				}
-				popup(risky.getName(), 1);
-				currPlayer.draftUnits(currPlayer.getDraftedArmies(), risky);
+				aiDraft(currPlayer);
 				updateGUI();
 				// Attack
-	
-				int losses = 0;
-				aiAttack(currPlayer.getTerritories(), losses);
+				aiAttack();
+				
 				// Fortify
-				// -ToDo
-	
+				if (currPlayer.getTerritories().size() > 1) {
+					Country weak = null;
+					Country strong = null;
+					Iterator<Country> it0 = currPlayer.getTerritories().iterator();					
+					while (it0.hasNext()) {
+						Country c = (Country)it0.next();
+						strong = (strong == null || (c.getWeight() < strong.getWeight() && c.getArmySize() > 1)) ? c : strong;
+					}
+								
+					Iterator<Country> it1 = gameboard.getNeighbors(strong).iterator();
+					while (it1.hasNext()) {
+						Country c = (Country)it1.next();
+						if (currPlayer.getTerritories().contains(c))
+							weak = (weak == null || (c.getWeight() > weak.getWeight())) ? c : weak;
+					}
+					popup("Fortifying: " + strong.getName() + " -> " + weak.getName(), 1);
+					fortify(strong, weak);
+				}
+				
 				// Next turn
 				nextTurn();
 			}
@@ -259,35 +269,51 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		}
 	}
 
-	private void aiAttack(ArrayList<Country> a, int losses) {
-		ArrayList<Country> c = new ArrayList<>();
-		for (Country b : a)
-			c.add(b);
-		for (Country t : c) {
-			popup("Size: " + c.size(), 1);
-			Set<Country> s = (Set<Country>) gameboard.getNeighbors(t);
-			Iterator<Country> i = null;
-			i = s.iterator();
-			Country w = null;
-			while (i.hasNext()) {
-				Country n = (Country) i.next();
-				if (n.getPlayer() != currPlayer) {
-					if (t.getWeight() <= n.getWeight()) {
-						w = n;
+	private void aiAttack() {
+		int losses = 0, tries = 0;
+		while (losses < 3 && tries < 10) {
+			ArrayList<Country> c = new ArrayList<>();
+			for (Country b : currPlayer.getTerritories()) c.add(b);
+			boolean lost = false;
+			for (Country t : c) {
+				Set<Country> s = (Set<Country>) gameboard.getNeighbors(t);
+				Iterator<Country> i = null;
+				i = s.iterator();
+				Country w = null;
+				while (i.hasNext()) {
+					Country n = (Country) i.next();
+					if (n.getPlayer() != currPlayer) {
+						if (t.getWeight() <= n.getWeight()) {
+							w = n;
+						}
 					}
 				}
+				if (w != null) {
+					if (!attack(t, w)) {
+						losses++;
+						lost = true;
+						break;
+					}
+				}				
 			}
-			if (w != null) {
-				if (attack(t, w)) {
-					aiAttack(c, losses);
-				} else {
-					popup("LOSS", 0);
-					losses++;
-				}
-			}
-			if (losses > 3) {
-				popup("Loss #" + losses, 1);
-				break;
+			if (lost) losses++;
+			tries++;
+		}
+		popup("Done attacking", 1);
+	}
+	
+	private void aiDraft(Player p) {
+		adjust();
+		int ida = p.getDraftedArmies();
+		ArrayList<Country> t = p.getTerritories();
+		float tw = 0;
+		for (Country c : t) tw += c.getWeight();
+		while (p.getDraftedArmies() > 0) {
+			for (Country c : t) {
+				int draftable = (int) ((c.getWeight() / tw) * ida);
+				draftable = (draftable > p.getDraftedArmies()) ? p
+						.getDraftedArmies() : draftable;
+				p.draftUnits(draftable, c);
 			}
 		}
 	}
@@ -296,7 +322,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private void createPlayers() {
 		// Create Players
 		this.players = new ArrayList<Player>();
-		players.add(new Player("Human", PlayerColors.BLUE, 80));
+		players.add(new Player("Human", PlayerColors.BLUE, 14));
 		players.add(new PlayerAI("Computer", PlayerColors.RED, 80));
 		players.add(new Player("Neutral", PlayerColors.GRAY, 40));
 	}
@@ -345,23 +371,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private void initialArmyPlacement() {
 		if (gameState == State.DRAFT) {
 			for (int i = 1; i < players.size(); i++) {
-				adjust(); // Make sure the Neutral player knows where to place units in
-									// relation to AI
-				Player p = players.get(i);
-				int ida = p.getDraftedArmies();
-				ArrayList<Country> l = p.getTerritories();
-				float tw = 0;
-				for (Country c : l) {
-					tw += c.getWeight();
-				}
-				while (p.getDraftedArmies() > 0) {
-					for (Country c : l) {
-						int draftable = (int) ((c.getWeight() / tw) * ida);
-						draftable = (draftable > p.getDraftedArmies()) ? p
-								.getDraftedArmies() : draftable;
-						p.draftUnits(draftable, c);
-					}
-				}
+				aiDraft(players.get(i));
 			}
 			chooseSourceButton.setEnabled(false);
 			chooseDestButton.setEnabled(false);
@@ -588,6 +598,9 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				&& attackerUnits > (iua * diffFact)) {
 			attackerDice = attackerUnits > 3 ? 3 : attackerUnits > 2 ? 2 : 1;
 			defenderDice = defenderUnits > 1 ? 2 : 1;
+			
+			if (defenderUnits < 3 && attackerUnits > 3) attackerDice = 1;
+			if (defenderUnits < attackerUnits*0.5) defenderDice = 1;
 
 			byte result = Die.rollOff(attackerDice, defenderDice);
 			int numberOfAttackWins = result & 0xF;
@@ -613,26 +626,20 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			s.getPlayer().winBattle(s, d, val);
 			capturedTerritory = true;
 			updateGUI();
-			msg = String.format("%s gained control of %s (%s).", s.getPlayer()
-					.getName(), d.getName(), loser);
+			msg = String.format("%s gained control of %s (%s).", s.getPlayer().getName(), d.getName(), loser);
 			adjust();
 			victory = true;
 		} else if (attackerUnits > (iua * diffFact)) {
 			msg = String.format("%s gave up the battle.", s.getPlayer().getName());
 		} else {
-			msg = String.format("%s lost the battle.", s.getPlayer().getName());
+			msg = String.format("%s lost the battle between %s and %s (%s).", s.getPlayer().getName(), s.getName(), d.getName(), d.getPlayer().getName());
 		}
 		popup(msg, 1);
 		return victory;
 	}
 
 	private void fortify(Country s, Country d) {
-		int val = 0;
-		if (currPlayer == players.get(0))
-			val = transfer(1, s);
-		else {
-			val = s.getArmySize() / 2; // Expand on this :)
-		}
+		int val = (currPlayer == players.get(0)) ? transfer(1, s) : s.getArmySize()-1;
 		if (val > 0) {
 			currPlayer.removeUnits(val, s);
 			currPlayer.addUnits(val, d);
