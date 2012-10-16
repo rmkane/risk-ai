@@ -13,9 +13,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -127,6 +131,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		initGUI();
 		initialArmyPlacement();
 		updateGUI();
+		
 		takeTurn();
 	}
 
@@ -152,7 +157,6 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			}
 			/** Cash-in Bonus */
 			int cash_inBonus = 0;
-			int match_bonus = 0;
 			boolean cashed = false;
 			ArrayList<Card> cards = currPlayer.getHand();
 			if (cards.size() > 2) {
@@ -204,44 +208,87 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	}
 
 	private void takeTurn() {
-		adjust();
-		currPlayer = players.get(turn % 2);
-		JOptionPane.showMessageDialog(null, "Get Ready " + currPlayer.getName(),
-				"RISK", JOptionPane.PLAIN_MESSAGE);
-		sourceCountryImageLabel.setIcon(DEFAULT_ICON);
-		destCountryImageLabel.setIcon(DEFAULT_ICON);
-		capturedTerritory = false;
-		gameState = State.DRAFT;
-		clearSelection();
-		actionButton.setText("<Action>");
-		chooseSourceButton.setEnabled(false);
-		chooseDestButton.setEnabled(false);
-		actionButton.setEnabled(false);
-		endPhaseButton.setEnabled(true);
-		endPhaseButton.setText(END_DRAFT);
-
-		draft();
-
-		// Handle AI, Turn
-		if (currPlayer != players.get(0) && currPlayer == players.get(1)) {
-			// chooseSourceButton.setEnabled(false);
-			// chooseDestButton.setEnabled(false);
-			// actionButton.setEnabled(false);
-			// endPhaseButton.setEnabled(false);
-			// actionButton.setText("<Action>");
-			// endPhaseButton.setText("<Phase>");
-			// Draft
-			Country risky = null;
-			for (Country country : currPlayer.getTerritories()) {
-				risky = risky == null || country.getWeight() > risky.getWeight() ? country
-						: risky;
+		if (turn < 40) {
+			adjust();
+			currPlayer = players.get(turn % 2);
+			JOptionPane.showMessageDialog(null, "Get Ready " + currPlayer.getName(),
+					"RISK", JOptionPane.PLAIN_MESSAGE);
+			sourceCountryImageLabel.setIcon(DEFAULT_ICON);
+			destCountryImageLabel.setIcon(DEFAULT_ICON);
+			capturedTerritory = false;
+			gameState = State.DRAFT;
+			clearSelection();
+			actionButton.setText("<Action>");
+			chooseSourceButton.setEnabled(false);
+			chooseDestButton.setEnabled(false);
+			actionButton.setEnabled(false);
+			endPhaseButton.setEnabled(true);
+			endPhaseButton.setText(END_DRAFT);
+	
+			draft();
+	
+			// Handle AI, Turn
+			if (currPlayer != players.get(0) && currPlayer == players.get(1)) {
+				chooseSourceButton.setEnabled(false);
+				chooseDestButton.setEnabled(false);
+				actionButton.setEnabled(false);
+				endPhaseButton.setEnabled(false);
+				actionButton.setText("<Action>");
+				endPhaseButton.setText("<Phase>");
+				// Draft
+				Country risky = null;
+				for (Country country : currPlayer.getTerritories()) {
+					risky = risky == null || country.getWeight() > risky.getWeight() ? country
+							: risky;
+				}
+				popup(risky.getName(), 1);
+				currPlayer.draftUnits(currPlayer.getDraftedArmies(), risky);
+				updateGUI();
+				// Attack
+	
+				int losses = 0;
+				aiAttack(currPlayer.getTerritories(), losses);
+				// Fortify
+				// -ToDo
+	
+				// Next turn
+				nextTurn();
 			}
-			popup(risky.getName(), 1);
-			currPlayer.draftUnits(currPlayer.getDraftedArmies(), risky);
-			updateGUI();
-			// Attack
+		} else {
+			popup("Game Over!", 1);
+		}
+	}
 
-			// Fortify
+	private void aiAttack(ArrayList<Country> a, int losses) {
+		ArrayList<Country> c = new ArrayList<>();
+		for (Country b : a)
+			c.add(b);
+		for (Country t : c) {
+			popup("Size: " + c.size(), 1);
+			Set<Country> s = (Set<Country>) gameboard.getNeighbors(t);
+			Iterator<Country> i = null;
+			i = s.iterator();
+			Country w = null;
+			while (i.hasNext()) {
+				Country n = (Country) i.next();
+				if (n.getPlayer() != currPlayer) {
+					if (t.getWeight() <= n.getWeight()) {
+						w = n;
+					}
+				}
+			}
+			if (w != null) {
+				if (attack(t, w)) {
+					aiAttack(c, losses);
+				} else {
+					popup("LOSS", 0);
+					losses++;
+				}
+			}
+			if (losses > 3) {
+				popup("Loss #" + losses, 1);
+				break;
+			}
 		}
 	}
 
@@ -249,8 +296,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private void createPlayers() {
 		// Create Players
 		this.players = new ArrayList<Player>();
-		players.add(new Player("Human", PlayerColors.BLUE, 30)); // Change back to
-																															// 80
+		players.add(new Player("Human", PlayerColors.BLUE, 80));
 		players.add(new PlayerAI("Computer", PlayerColors.RED, 80));
 		players.add(new Player("Neutral", PlayerColors.GRAY, 40));
 	}
@@ -292,7 +338,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	}
 
 	private void adjust() {
-		gameboard.setWeightsHard(players.get(1), players.get(0), players.get(2));
+		gameboard.setWeightsEasy(players.get(1), players.get(0), players.get(2));
 		gameboard.printWeights();
 	}
 
@@ -529,16 +575,79 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		}
 	}
 
-	private void fortify() {
-		int val = transfer(1);
+	private boolean attack(Country s, Country d) {
+		// Number starting of units
+		boolean victory = false;
+		int iua = s.getArmySize(), attackerUnits = iua;
+		int iud = d.getArmySize(), defenderUnits = iud;
+		float diffFact = 0.25f; // Afford to lose
+
+		int attackerDice = 0;
+		int defenderDice = 0;
+		while (attackerUnits > 1 && defenderUnits > 0
+				&& attackerUnits > (iua * diffFact)) {
+			attackerDice = attackerUnits > 3 ? 3 : attackerUnits > 2 ? 2 : 1;
+			defenderDice = defenderUnits > 1 ? 2 : 1;
+
+			byte result = Die.rollOff(attackerDice, defenderDice);
+			int numberOfAttackWins = result & 0xF;
+			int numberOfDefendWins = result >> 4;
+
+			// Decrement units
+			attackerUnits -= numberOfDefendWins;
+			defenderUnits -= numberOfAttackWins;
+			d.getPlayer().removeUnits(numberOfAttackWins, d);
+			s.getPlayer().removeUnits(numberOfDefendWins, s);
+		}
+		updateGUI();
+		String msg = "";
+		if (attackerUnits > 1 && defenderUnits == 0) {
+			capturedTerritory = true;
+			int val = 0;
+			if (currPlayer == players.get(0))
+				val = transfer(attackerDice, s);
+			else {
+				val = Math.max(attackerDice, s.getArmySize() / 2); // Expand on this :)
+			}
+			String loser = d.getPlayer().getName();
+			s.getPlayer().winBattle(s, d, val);
+			capturedTerritory = true;
+			updateGUI();
+			msg = String.format("%s gained control of %s (%s).", s.getPlayer()
+					.getName(), d.getName(), loser);
+			adjust();
+			victory = true;
+		} else if (attackerUnits > (iua * diffFact)) {
+			msg = String.format("%s gave up the battle.", s.getPlayer().getName());
+		} else {
+			msg = String.format("%s lost the battle.", s.getPlayer().getName());
+		}
+		popup(msg, 1);
+		return victory;
+	}
+
+	private void fortify(Country s, Country d) {
+		int val = 0;
+		if (currPlayer == players.get(0))
+			val = transfer(1, s);
+		else {
+			val = s.getArmySize() / 2; // Expand on this :)
+		}
 		if (val > 0) {
-			currPlayer.removeUnits(val, sourceCountry);
-			currPlayer.addUnits(val, destCountry);
+			currPlayer.removeUnits(val, s);
+			currPlayer.addUnits(val, d);
 			chooseSourceButton.setEnabled(false);
 			chooseDestButton.setEnabled(false);
 			actionButton.setEnabled(false);
 			updateGUI();
 		}
+	}
+
+	private void nextTurn() {
+		updateGUI();
+		capturedTerritory = false;
+		turn++;
+		takeTurn();
 	}
 
 	private void popup(String msg, int val) {
@@ -549,13 +658,14 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		int messageType = JOptionPane.WARNING_MESSAGE;
 		String[] options = { "Yes", "No" };
 		int response = JOptionPane.showOptionDialog(this, "Are you sure?",
-				endPhaseButton.getText() + "?!", 0, messageType, null, options, options[0]);
+				endPhaseButton.getText() + "?!", 0, messageType, null, options,
+				options[0]);
 		return response;
 	}
 
-	private int transfer(int min) {
+	private int transfer(int min, Country s) {
 		int bound = min == 0 ? -1 : -min;
-		Object[] vals = new Object[sourceCountry.getArmySize() + bound];
+		Object[] vals = new Object[s.getArmySize() + bound];
 		for (int i = 0; i < vals.length; i++)
 			vals[i] = Integer.toString(i + min);
 		String val = (String) JOptionPane.showInputDialog(this, "Transfer Amount",
@@ -739,52 +849,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		if (e.getSource() == actionButton) {
 			if (actionButton.getText().equalsIgnoreCase("Attack")) {
 				if (sourceCountry != null && destCountry != null) {
-					// ****************************************************//
-					// Number starting of units
-					int iua = sourceCountry.getArmySize(), attackerUnits = iua;
-					int iud = destCountry.getArmySize(), defenderUnits = iud;
-					float diffFact = 0.25f; // Afford to lose
-
-					int attackerDice = 0;
-					int defenderDice = 0;
-					while (attackerUnits > 1 && defenderUnits > 0
-							&& attackerUnits > (iua * diffFact)) {
-						attackerDice = attackerUnits > 3 ? 3 : attackerUnits > 2 ? 2 : 1;
-						defenderDice = defenderUnits > 1 ? 2 : 1;
-
-						byte result = Die.rollOff(attackerDice, defenderDice);
-						int numberOfAttackWins = result & 0xF;
-						int numberOfDefendWins = result >> 4;
-
-						// Decrement units
-						attackerUnits -= numberOfDefendWins;
-						defenderUnits -= numberOfAttackWins;
-						destCountry.getPlayer()
-								.removeUnits(numberOfAttackWins, destCountry);
-						sourceCountry.getPlayer().removeUnits(numberOfDefendWins,
-								sourceCountry);
-					}
-					updateGUI();
-					String msg = "";
-					if (attackerUnits > 1 && defenderUnits == 0) {
-						capturedTerritory = true;
-						int val = transfer(attackerDice);
-						String loser = destCountry.getPlayer().getName();
-						sourceCountry.getPlayer()
-								.winBattle(sourceCountry, destCountry, val);
-						capturedTerritory = true;
-						updateGUI();
-						msg = String.format("%s gained control of %s (%s).", sourceCountry
-								.getPlayer().getName(), destCountry.getName(), loser);
-					} else if (attackerUnits > (iua * diffFact)) {
-						msg = String.format("%s gave up the battle.", sourceCountry
-								.getPlayer().getName());
-					} else {
-						msg = String.format("%s lost the battle.", sourceCountry
-								.getPlayer().getName());
-					}
-					popup(msg, 1);
-					// ****************************************************//
+					attack(sourceCountry, destCountry);
 				} else {
 					popup("Please choose a source and destination", 0);
 				}
@@ -792,7 +857,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			} else if (actionButton.getText().equalsIgnoreCase("Fortify")) {
 
 				if (sourceCountry != null && destCountry != null) {
-					fortify();
+					fortify(sourceCountry, destCountry);
 				} else {
 					popup("You have not selected your countries!", 0);
 				}
@@ -841,10 +906,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						popup(String.format("Card: %s - %s", draw.getCountryName(), draw
 								.getUnitType().getName()), 1);
 					}
-					updateGUI();
-					capturedTerritory = false;
-					turn++;
-					takeTurn();
+					nextTurn();
 				} else {
 					popup("Aborted Action!", 1);
 				}

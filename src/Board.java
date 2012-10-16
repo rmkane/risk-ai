@@ -334,30 +334,55 @@ public class Board {
 	  return nValue.getNodeValue();
 	}
 	
+	public float BSR(Country c) {
+		Player p0 = c.getPlayer();
+		float BST = 0;
+		Iterator<Country> it = getNeighbors(c).iterator();
+		while(it.hasNext()) {
+			Country c1 = (Country)it.next();
+			Player p1 = c1.getPlayer();
+			if (p1 != p0) BST += c1.getArmySize();
+		}
+		it = null;
+		return BST / c.getArmySize();
+	}
+
 	public void setWeightsEasy(Player A, Player H, Player N) {
 		for (Country c0 : territories) {
-			float weight = 0;
-			int u0 = c0.getArmySize();
-			Player p0 = c0.getPlayer();
+			float BSRz = 0;
 			Iterator<Country> it = getNeighbors(c0).iterator();
 			while(it.hasNext()) {
 				Country c1 = (Country)it.next();
-				c1 = (c1 == c0) ? (Country)it.next() : c1;
 				Player p1 = c1.getPlayer();
-				int u1 = c1.getArmySize();
-				float ratio0 = p1 != p0 ? (((float)u1/u0) * 10) : 0;
-				int priority = /* Calculate the threat level for the current country. */
-						/*.*[      -- if AI --   ][    -- if Human --    ][    -- if Neutral --  ]*.....*/ //
-							  (p0 == A && p1 == H) || (p0 == H && p1 == A) || (p0 == N && p1 != N) ? 3 /*.*/ //
-						  : (p0 == A && p1 == N) || (p0 == H && p1 == N) || (p0 == N && p1 != N) ? 2 /*.*/ //
-						  : (p0 == A && p1 == A) || (p0 == H && p1 == H) || (p0 == N && p1 == N) ? 1 : 0;
-				weight += priority * ratio0;
+				BSRz += (p1 != N) ? BSR(c1) : BSR(c1) * 0.75; 
 			}
-			c0.setWeight(weight);
+			float NBSR = BSR(c0) / BSRz;
+			c0.setWeight(NBSR);
 		}
 	}
 	
 	public void setWeightsHard(Player A, Player H, Player N) {
+		float BSRz0 = 0;
+		float BSRz1 = 0;
+		for (Country c0 : territories) {
+			Iterator<Country> it0 = getNeighbors(c0).iterator();
+			while(it0.hasNext()) {
+				Country c1 = (Country)it0.next();
+				Player p1 = c1.getPlayer();
+				BSRz0 += (p1 != N) ? BSR(c1) : BSR(c1) /* * 0.75 */; 
+				Iterator<Country> it1 = getNeighbors(c1).iterator();
+				while(it1.hasNext()) {
+					Country c2 = (Country)it1.next();
+					Player p2 = c2.getPlayer();
+					BSRz1 += (p2 != N) ? BSR(c2) : BSR(c2) /1000; 
+				}
+			}
+			float BSR = BSR(c0);
+			float NBSR = ((BSR / BSRz0) + (BSR / BSRz1));
+			c0.setWeight(NBSR);
+		}
+		
+		
 		for (Country c0 : territories) {
 			float weight = 0;
 			int u0 = c0.getArmySize();
