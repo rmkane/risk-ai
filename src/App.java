@@ -243,22 +243,25 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				
 				// Fortify
 				if (currPlayer.getTerritories().size() > 1) {
+					popup("Begin Fortify", 1);
 					Country weak = null;
 					Country strong = null;
 					Iterator<Country> it0 = currPlayer.getTerritories().iterator();					
 					while (it0.hasNext()) {
 						Country c = (Country)it0.next();
-						strong = (strong == null || (c.getWeight() < strong.getWeight() && c.getArmySize() > 1)) ? c : strong;
+						strong = (strong == null || (c.getWeight() < strong.getWeight() 
+								&& c.getArmySize() > 1 && hasAllies(c))) ? c : strong;
 					}
-								
-					Iterator<Country> it1 = gameboard.getNeighbors(strong).iterator();
-					while (it1.hasNext()) {
-						Country c = (Country)it1.next();
-						if (currPlayer.getTerritories().contains(c))
-							weak = (weak == null || (c.getWeight() > weak.getWeight())) ? c : weak;
+					if (!hasAllies(strong)) {
+						Iterator<Country> it1 = gameboard.getNeighbors(strong).iterator();
+						while (it1.hasNext()) {
+							Country c = (Country)it1.next();
+							if (currPlayer.getTerritories().contains(c))
+								weak = (weak == null || (c.getWeight() > weak.getWeight())) ? c : weak;
+						}
+						popup("Fortifying: " + strong.getName() + " -> " + weak.getName(), 1);
+						fortify(strong, weak);
 					}
-					popup("Fortifying: " + strong.getName() + " -> " + weak.getName(), 1);
-					fortify(strong, weak);
 				}
 				
 				// Next turn
@@ -268,36 +271,48 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			popup("Game Over!", 1);
 		}
 	}
+	
+	private boolean hasAllies(Country c) {
+		Iterator<Country> it = gameboard.getNeighbors(c).iterator();
+		while (it.hasNext()) {
+			Country n = (Country)it.next();
+			if ((n).getPlayer() == c.getPlayer())
+				return true;
+		}
+		return false;
+	}
 
 	private void aiAttack() {
 		int losses = 0, tries = 0;
+		popup("Begin Attack", 1);
 		while (losses < 3 && tries < 10) {
 			ArrayList<Country> c = new ArrayList<>();
 			for (Country b : currPlayer.getTerritories()) c.add(b);
 			boolean lost = false;
-			for (Country t : c) {
-				Set<Country> s = (Set<Country>) gameboard.getNeighbors(t);
-				Iterator<Country> i = null;
-				i = s.iterator();
-				Country w = null;
-				while (i.hasNext()) {
-					Country n = (Country) i.next();
-					if (n.getPlayer() != currPlayer) {
-						if (t.getWeight() <= n.getWeight()) {
-							w = n;
-						}
+			Country r = c.get((int)(Math.random()*c.size()-1));
+			//popup("Evaluating: " + r.getName(), 1);
+			Set<Country> s = (Set<Country>) gameboard.getNeighbors(r);
+			Iterator<Country> i = null;
+			i = s.iterator();
+			Country w = null;
+			while (i.hasNext()) {
+				Country n = (Country) i.next();
+				if (n.getPlayer() != currPlayer) {
+					if (r.getWeight() <= n.getWeight()) {
+						w = n;
 					}
 				}
-				if (w != null) {
-					if (!attack(t, w)) {
-						losses++;
-						lost = true;
-						break;
-					}
-				}				
 			}
+			if (w != null) {
+				if (!attack(r, w)) {
+					losses++;
+					lost = true;
+					break;
+				}
+			}				
 			if (lost) losses++;
 			tries++;
+			popup("Done try #" + tries, 1);
 		}
 		popup("Done attacking", 1);
 	}
@@ -308,11 +323,18 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		ArrayList<Country> t = p.getTerritories();
 		float tw = 0;
 		for (Country c : t) tw += c.getWeight();
+		//int i = 0;
 		while (p.getDraftedArmies() > 0) {
+			//popup("Pass #" + ++i + " Remaing units: " + p.getDraftedArmies(), 1);
 			for (Country c : t) {
-				int draftable = (int) ((c.getWeight() / tw) * ida);
-				draftable = (draftable > p.getDraftedArmies()) ? p
-						.getDraftedArmies() : draftable;
+				//popup(String.format("%s: (%.4f / %.4f) * %d", c.getName(), c.getWeight(), tw, ida), 1);
+				float val = (c.getWeight() / tw) * ida;
+				int draftable = 0;
+				// Ratio < 1
+				if (val > 0)
+					draftable = (int) Math.round(val);
+				// Number or proposed units are greater than supply
+				draftable = (draftable > p.getDraftedArmies()) ? p.getDraftedArmies() : draftable;
 				p.draftUnits(draftable, c);
 			}
 		}
@@ -322,7 +344,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private void createPlayers() {
 		// Create Players
 		this.players = new ArrayList<Player>();
-		players.add(new Player("Human", PlayerColors.BLUE, 14));
+		players.add(new Player("Human", PlayerColors.BLUE, 80));
 		players.add(new PlayerAI("Computer", PlayerColors.RED, 80));
 		players.add(new Player("Neutral", PlayerColors.GRAY, 40));
 	}

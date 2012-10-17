@@ -374,48 +374,12 @@ public class Board {
 				while(it1.hasNext()) {
 					Country c2 = (Country)it1.next();
 					Player p2 = c2.getPlayer();
-					BSRz1 += (p2 != N) ? BSR(c2) : BSR(c2) /1000; 
+					BSRz1 += (p2 != N) ? BSR(c2) : BSR(c2); 
 				}
 			}
 			float BSR = BSR(c0);
 			float NBSR = ((BSR / BSRz0) + (BSR / BSRz1));
 			c0.setWeight(NBSR);
-		}
-		
-		
-		for (Country c0 : territories) {
-			float weight = 0;
-			int u0 = c0.getArmySize();
-			Player p0 = c0.getPlayer();
-			Iterator<Country> it1 = getNeighbors(c0).iterator();
-			while(it1.hasNext()) {
-				Country c1 = (Country)it1.next();
-				c1 = (c1 == c0) ? (Country)it1.next() : c1;
-				Player p1 = c1.getPlayer();
-				int u1 = c1.getArmySize();
-				float ratio0 = p1 != p0 ? (((float)u1/u0) * 10) : 0;
-				Iterator<Country> it2 = getNeighbors(c1).iterator();
-				while(it2.hasNext()) {
-					Country c2 = (Country)it2.next();
-					c2 = (c2 == c1) ? (Country)it2.next() : c2;
-					Player p2 = c2.getPlayer();
-					int u2 = c2.getArmySize();
-					float ratio1 = p2 != p1 ? (float)(u2)/u1 : 0;
-					int priority = /* Calculate the threat level for the current country. */
-					/*.*[         -- if AI --           ][       -- if Human --            ][           -- if Neutral --      ]*.....*/ //
-						  (p0 == A && p1 == H && p2 == H) || (p0 == H && p1 == A && p2 == A) || (p0 == N && p1 != N && p2 != N) ? 9 /*.*/ //
-					  : (p0 == A && p1 == H && p2 == N) || (p0 == H && p1 == A && p2 == N) /*..............................*/ ? 8 /*.*/ //
-					  : (p0 == A && p1 == N && p2 == H) || (p0 == H && p1 == N && p2 == A) /*..............................*/ ? 7 /*.*/ //
-					  : (p0 == A && p1 == N && p2 == N) || (p0 == H && p1 == N && p2 == N) /*..............................*/ ? 6 /*.*/ //
-					  : (p0 == A && p1 == H && p2 == A) || (p0 == H && p1 == A && p2 == H) || (p0 == N && p1 != N && p2 == N) ? 5 /*.*/ //
-					  : (p0 == A && p1 == N && p2 == A) || (p0 == H && p1 == N && p2 == H) /*..............................*/ ? 4 /*.*/ //
-					  : (p0 == A && p1 == A && p2 == H) || (p0 == H && p1 == H && p2 == A) /*..............................*/ ? 3 /*.*/ //
-					  : (p0 == A && p1 == A && p2 == N) || (p0 == H && p1 == H && p2 == N) /*..............................*/ ? 2 /*.*/ //
-					  : (p0 == A && p1 == A && p2 == A) || (p0 == H && p1 == H && p2 == H) || (p0 == N && p1 == N && p2 == N) ? 1 : 0;
-					weight += priority * (ratio0 + ratio1);
-				}
-			}
-			c0.setWeight(weight);
 		}
 	}
 	
