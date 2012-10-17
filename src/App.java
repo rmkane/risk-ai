@@ -252,7 +252,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						strong = (strong == null || (c.getWeight() < strong.getWeight() 
 								&& c.getArmySize() > 1 && hasAllies(c))) ? c : strong;
 					}
-					if (!hasAllies(strong)) {
+					//if (!hasAllies(strong)) {
 						Iterator<Country> it1 = gameboard.getNeighbors(strong).iterator();
 						while (it1.hasNext()) {
 							Country c = (Country)it1.next();
@@ -262,7 +262,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						popup("Fortifying: " + strong.getName() + " -> " + weak.getName(), 1);
 						fortify(strong, weak);
 					}
-				}
+				//}
 				
 				// Next turn
 				nextTurn();
@@ -344,7 +344,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private void createPlayers() {
 		// Create Players
 		this.players = new ArrayList<Player>();
-		players.add(new Player("Human", PlayerColors.BLUE, 80));
+		players.add(new Player("Human", PlayerColors.BLUE, 14));
 		players.add(new PlayerAI("Computer", PlayerColors.RED, 80));
 		players.add(new Player("Neutral", PlayerColors.GRAY, 40));
 	}
