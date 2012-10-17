@@ -264,12 +264,20 @@ public class App extends JFrame implements MouseListener, ActionListener {
 						catch(NullPointerException e) {}
 					}
 				//}
-				
+				if (currPlayer.getTerritories().size() == 42) {
+					popup(String.format("%s Achieved Global Domination!", currPlayer.getName()), 1);
+				} else {
 				// Next turn
-				nextTurn();
+					nextTurn();
+				}			
 			}
 		} else {
-			popup("Game Over!", 1);
+			
+			Player winner = null;
+			for (Player p : players) {
+				winner = (winner == null || (p.getTerritories().size() > winner.getTerritories().size()) ? p : winner);
+			}
+			popup(String.format("Player: %s Wins!", winner.getName()), 1);
 		}
 	}
 	
@@ -290,7 +298,17 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			boolean lost = false;
 			ArrayList<Country> c = new ArrayList<>();
 			for (Country b : currPlayer.getTerritories()) c.add(b);
-			Country r = c.get((int)(Math.random()*c.size()-1));
+			Country r = null;
+			if (tries%2 == 0) {
+				r = c.get((int)(Math.random()*c.size()-1));
+			} else {
+				Iterator<Country> it = c.iterator();
+				while (it.hasNext()) {
+					Country t = (Country)it.next();
+					r = (r == null || (t.getWeight() < r.getWeight()) && t.getWeight() > 0) ? t : r;
+				}
+				
+			}
 			//popup("Evaluating: " + r.getName(), 1);
 			Set<Country> s = (Set<Country>) gameboard.getNeighbors(r);
 			Iterator<Country> i = null;
