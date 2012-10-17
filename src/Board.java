@@ -253,12 +253,10 @@ public class Board {
 			territories.addEdge(N_EUROPE, W_EUROPE);
 			territories.addEdge(SCANDINAVIA, UKRAINE);
 			territories.addEdge(S_EUROPE, UKRAINE);
-			territories.addEdge(S_EUROPE, N_AFRICA);
+			territories.addEdge(S_EUROPE, W_EUROPE);
 			territories.addEdge(S_EUROPE, EGYPT);
-			territories.addEdge(W_EUROPE, S_EUROPE);
-			territories.addEdge(W_EUROPE, EGYPT);
+			territories.addEdge(S_EUROPE, N_AFRICA);
 			territories.addEdge(W_EUROPE, N_AFRICA);
-			territories.addEdge(W_EUROPE, MIDDLE_EAST);
 			territories.addEdge(UKRAINE, AFGHANISTAN);
 			territories.addEdge(UKRAINE, MIDDLE_EAST);
 			territories.addEdge(UKRAINE, URAL);
@@ -356,6 +354,7 @@ public class Board {
 				Player p1 = c1.getPlayer();
 				BSRz += (p1 != N) ? BSR(c1) : BSR(c1) * 0.75; 
 			}
+			BSRz = (BSRz <= 0) ? 1 : BSRz; 
 			float NBSR = BSR(c0) / BSRz;
 			c0.setWeight(NBSR);
 		}

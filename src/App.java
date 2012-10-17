@@ -260,7 +260,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 								weak = (weak == null || (c.getWeight() > weak.getWeight())) ? c : weak;
 						}
 						popup("Fortifying: " + strong.getName() + " -> " + weak.getName(), 1);
-						fortify(strong, weak);
+						try { fortify(strong, weak); } 
+						catch(NullPointerException e) {}
 					}
 				//}
 				
@@ -286,9 +287,9 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		int losses = 0, tries = 0;
 		popup("Begin Attack", 1);
 		while (losses < 3 && tries < 10) {
+			boolean lost = false;
 			ArrayList<Country> c = new ArrayList<>();
 			for (Country b : currPlayer.getTerritories()) c.add(b);
-			boolean lost = false;
 			Country r = c.get((int)(Math.random()*c.size()-1));
 			//popup("Evaluating: " + r.getName(), 1);
 			Set<Country> s = (Set<Country>) gameboard.getNeighbors(r);
@@ -296,6 +297,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			i = s.iterator();
 			Country w = null;
 			while (i.hasNext()) {
+			lost = false;
 				Country n = (Country) i.next();
 				if (n.getPlayer() != currPlayer) {
 					if (r.getWeight() <= n.getWeight()) {
@@ -305,9 +307,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			}
 			if (w != null) {
 				if (!attack(r, w)) {
-					losses++;
 					lost = true;
-					break;
 				}
 			}				
 			if (lost) losses++;
@@ -324,6 +324,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		float tw = 0;
 		for (Country c : t) tw += c.getWeight();
 		//int i = 0;
+		int pass = 0;
 		while (p.getDraftedArmies() > 0) {
 			//popup("Pass #" + ++i + " Remaing units: " + p.getDraftedArmies(), 1);
 			for (Country c : t) {
@@ -333,10 +334,13 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				// Ratio < 1
 				if (val > 0)
 					draftable = (int) Math.round(val);
+				if (pass > 0) draftable += 1; // Make sure the AI does not run into an endless loop...
 				// Number or proposed units are greater than supply
 				draftable = (draftable > p.getDraftedArmies()) ? p.getDraftedArmies() : draftable;
 				p.draftUnits(draftable, c);
+				System.out.println(p.getName() + ": Drafting " + draftable + " units to " + c.getName() + ". Units left: " + p.getDraftedArmies());
 			}
+			pass++;
 		}
 	}
 
@@ -642,7 +646,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 			if (currPlayer == players.get(0))
 				val = transfer(attackerDice, s);
 			else {
-				val = Math.max(attackerDice, s.getArmySize() / 2); // Expand on this :)
+				val = Math.max(attackerDice, s.getArmySize() / 2);
 			}
 			String loser = d.getPlayer().getName();
 			s.getPlayer().winBattle(s, d, val);

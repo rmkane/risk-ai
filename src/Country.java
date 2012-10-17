@@ -119,6 +119,6 @@ public class Country implements Comparable<Country>{
 	public String toString() {
 		DecimalFormat df = new DecimalFormat("#,###,##0.00000");
 		
-		return String.format("Name: %-24sWeight: %10s", name, df.format(weight));
+		return String.format("Name: %-24sWeight: %10s", name, (weight == 0) ? "#" : df.format(weight));
 	}
 }
