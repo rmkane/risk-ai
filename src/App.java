@@ -209,6 +209,8 @@ public class App extends JFrame implements MouseListener, ActionListener {
 
 	private void takeTurn() {
 		if (turn < 40) {
+			if (turn%2 == 0)
+				popup(String.format("Begin Round #%d", (turn/2)+1), 1);
 			adjust();
 			currPlayer = players.get(turn % 2);
 			JOptionPane.showMessageDialog(null, "Get Ready " + currPlayer.getName(),
@@ -366,7 +368,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private void createPlayers() {
 		// Create Players
 		this.players = new ArrayList<Player>();
-		players.add(new Player("Human", PlayerColors.BLUE, 14));
+		players.add(new Player("Human", PlayerColors.BLUE, 80));
 		players.add(new PlayerAI("Computer", PlayerColors.RED, 80));
 		players.add(new Player("Neutral", PlayerColors.GRAY, 40));
 	}
@@ -403,7 +405,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 				p.getHand().remove(p.getHand().get(0));
 			}
 		}
-		System.out.println("Done");
+		//System.out.println("Done");
 		deck.emptyDeck();
 	}
 
@@ -783,7 +785,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 		// JOptionPane.showMessageDialog(this, "Message", "Title",
 		// JOptionPane.INFORMATION_MESSAGE);
 		// players.get(0).setColor(PlayerColors.BLUE.color());
-		System.err.print("Changed");
+		//System.err.print("Changed");
 
 		if (gameState == State.DRAFT) {
 			int p = mapPanel.getCurrPixel();

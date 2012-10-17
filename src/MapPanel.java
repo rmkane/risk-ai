@@ -76,7 +76,7 @@ public class MapPanel extends JPanel implements MouseListener, Observer {
 	public void getPixelInfo(BufferedImage image, int x, int y) {
 		int pixel = image.getRGB(x, y);
 		//System.out.printf("Pixel: (%d, %d) Color: %s\n", x, y, getARGBPixelData(pixel));
-		System.out.printf("new Point(%d, %d), 0x%x\n", x, y, pixel);
+		//System.out.printf("new Point(%d, %d), 0x%x\n", x, y, pixel);
 	}
 
 	public void printAllARGBDetails(BufferedImage image) {
