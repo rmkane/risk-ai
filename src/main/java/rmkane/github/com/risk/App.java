@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -13,13 +15,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -94,7 +92,7 @@ public class App extends JFrame implements MouseListener, ActionListener {
 	private final String EMPTY_HAND = String.format("%-15s%s%15s", "<", "EMPTY",
 			">");
 	private final ImageIcon DEFAULT_ICON = new ImageIcon(
-			readImage("resources/default.png"));
+			readImage("default.png"));
 
 	private Country sourceCountry;
 	private Country destCountry;

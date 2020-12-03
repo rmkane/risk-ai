@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 public class PlayerAI extends Player {
 	
 	public PlayerAI(String name, PlayerColors color, int armies) {

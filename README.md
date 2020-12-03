@@ -1,6 +1,10 @@
-#Risk : AI#
+# Risk: AI
 
-*Ryan Kane, Drew Payne, & Donald Shaner*
+* GUI is almost done.
+* AI is under way.
 
-+ GUI is almost done.
-+ AI is under way.
+## Contributors
+
+* Ryan Kane
+* Drew Payne
+* Donald Shaner

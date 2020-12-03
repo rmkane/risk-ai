@@ -1,27 +1,25 @@
+package rmkane.github.com.risk;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Observable;
 import java.util.Observer;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 
 public class MapPanel extends JPanel implements MouseListener, Observer {
 
 	private static final long serialVersionUID = 1L;
 	private final int WIDTH = 800, HEIGHT = 409;
-	private String filename = "resources/map.png";
+	private String filename = "map.png";
 	private BufferedImage map = readImage(filename);
 	private Board board;
 	private Font font = new Font("Verdana", Font.BOLD, 11);

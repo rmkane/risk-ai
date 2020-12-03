@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 public class Card {
 
 	private String countryName;

@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 import java.util.ArrayList;
 
 public class Continent {

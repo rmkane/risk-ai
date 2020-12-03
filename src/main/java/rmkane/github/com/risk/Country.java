@@ -1,8 +1,8 @@
+package rmkane.github.com.risk;
+
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.text.DecimalFormat;
 
@@ -79,7 +79,7 @@ public class Country implements Comparable<Country>{
 	
 	public void setImage(String name) {
 		String name_rpl = name.replace(" ", "_").toLowerCase();
-		String fname = "resources/countries/" + name_rpl + ".png";
+		String fname = "countries/" + name_rpl + ".png";
 		//System.out.println(fname);
 		this.image = new ImageIcon(readImage(fname));
 		

@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 import java.awt.Color;
 
 public enum PlayerColors {

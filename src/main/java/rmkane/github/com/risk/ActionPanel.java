@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 import javax.swing.JButton;
 import javax.swing.JPanel;
 

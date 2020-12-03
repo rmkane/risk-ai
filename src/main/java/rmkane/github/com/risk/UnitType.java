@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;

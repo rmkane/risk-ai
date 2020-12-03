@@ -1,3 +1,5 @@
+package rmkane.github.com.risk;
+
 public enum CountryEnum {
 	AFGANISTAN(			"Afghanistan", 						UnitType.INFANTRY),
 	ALASKA(					"Alaska", 								UnitType.INFANTRY),
